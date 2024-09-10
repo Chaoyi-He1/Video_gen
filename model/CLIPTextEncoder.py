@@ -30,22 +30,25 @@ class SSM_input_projection(nn.Module):
         
         self.textencoder = CreateTextEncoder(
             model_name=config["textencoder"],
-            freeze=config["freeze"],
-            projection=config["projection"],
+            freeze=config["textencoder_freeze"],
+            projection=config["textencoder_projection"],
         )
+        
+        assert self.input_dim == self.textencoder.config.hidden_size, \
+            f"input_dim should be {self.textencoder.config.hidden_size} but got {self.input_dim}"
         
         self.querries = nn.Conv1d(1, self.num_frames, 1)
         
         self.decoder_layer = nn.TransformerDecoderLayer(
             d_model=self.textencoder.config.hidden_size,
-            nhead=config["nhead"],
-            dim_feedforward=config["dim_feedforward"],
-            dropout=config["dropout"],
-            activation=config["activation"],
+            nhead=config["decoder_nhead"],
+            dim_feedforward=config["decoder_dim_feedforward"],
+            dropout=config["decoder_dropout"],
+            activation=config["decoder_activation"],
         )
         self.projection_block = nn.TransformerDecoder(
             self.decoder_layer, 
-            num_layers=config["num_layers"]
+            num_layers=config["decoder_num_layers"]
         )
     
     def forward(self, Token_text: dict):
