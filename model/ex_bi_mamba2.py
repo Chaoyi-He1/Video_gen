@@ -285,7 +285,7 @@ def test_export_onnx(net, x):
 
 if __name__ == '__main__':
     # 通用的多维度双向mamba2
-    from torchnssd import (
+    from .analysis_tools import (
         export_jit_script,
         export_onnx,
         statistics,
