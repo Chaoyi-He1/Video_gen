@@ -42,7 +42,6 @@ class SSM_input_projection(nn.Module):
             dim_feedforward=config["dim_feedforward"],
             dropout=config["dropout"],
             activation=config["activation"],
-            batch_first=True,
         )
         self.projection_block = nn.TransformerDecoder(
             self.decoder_layer, 
@@ -52,8 +51,9 @@ class SSM_input_projection(nn.Module):
     def forward(self, Token_text: dict):
         TextEncoderOutput = self.textencoder(**Token_text)
         last_hidden_state = TextEncoderOutput.last_hidden_state
+        pooled_output = TextEncoderOutput.pooler_output
         
-        querries = self.querries(last_hidden_state.unsqueeze(1)).squeeze(1)
+        querries = self.querries(pooled_output.unsqueeze(1)).permute(1, 0, 2)
         
         tgt_mask = (1 - torch.tril(torch.ones(self.num_frames, self.num_frames))).bool().to(querries.device)
         
