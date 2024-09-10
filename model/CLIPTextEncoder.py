@@ -51,7 +51,7 @@ class SSM_input_projection(nn.Module):
             num_layers=config["decoder_num_layers"]
         )
     
-    def forward(self, Token_text: dict):
+    def forward(self, **Token_text):
         TextEncoderOutput = self.textencoder(**Token_text)
         last_hidden_state = TextEncoderOutput.last_hidden_state
         pooled_output = TextEncoderOutput.pooler_output
