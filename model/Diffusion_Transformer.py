@@ -139,12 +139,12 @@ class DiT(nn.Module):
         input_size=32,
         patch_size=2,
         in_channels=4,
-        hidden_size=1152,
+        hidden_size=512,
         depth=28,
         num_heads=16,
         mlp_ratio=4.0,
         class_dropout_prob=0.1,
-        num_classes=1000,
+        latent_size=512,
         learn_sigma=True,
     ):
         super().__init__()
@@ -156,7 +156,7 @@ class DiT(nn.Module):
 
         self.x_embedder = PatchEmbed(input_size, patch_size, in_channels, hidden_size, bias=True)
         self.t_embedder = TimestepEmbedder(hidden_size)
-        self.y_embedder = LabelEmbedder(num_classes, hidden_size, class_dropout_prob)
+        self.y_embedder = LatentEmbedder(latent_size, hidden_size, class_dropout_prob)
         num_patches = self.x_embedder.num_patches
         # Will use fixed sin-cos embedding:
         self.pos_embed = nn.Parameter(torch.zeros(1, num_patches, hidden_size), requires_grad=False)
