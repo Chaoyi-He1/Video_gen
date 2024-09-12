@@ -3,3 +3,5 @@ data/openvid-1m/download/*
 data/openvid-1m/video/*
 data/openvid-1m/data/train/OpenVid-1M.csv
 data/openvid-1m/data/train/OpenVidHD.csv
+__pycache__
+.DS_Store
