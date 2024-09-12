@@ -1,0 +1,8 @@
+datasets==4.9.4
+decord==0.6.0
+eva-decord==0.6.1
+webdataset==0.2.100
+transformers==4.37.2
+torch==2.2.1
+torchaudio==2.2.1
+torchvision==0.17.1

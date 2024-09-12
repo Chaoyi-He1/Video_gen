@@ -1,6 +1,7 @@
 import torch
 from torch.utils.data import DataLoader
 from data_video import SFTDataset
+from text_tokenizer import CLIPTextTokenizer
 
 def create_data_loader(data_dir, video_size, fps, max_num_frames, skip_frms_num=3, batch_size=4, shuffle=True, num_workers=4):
     """
@@ -46,9 +47,10 @@ if __name__ == '__main__':
     batch_size = 1
     skip_frms_num = 3
 
-    data_loader = create_data_loader(data_dir, video_size, fps, max_num_frames, skip_frms_num=3, batch_size=batch_size, shuffle=True, num_workers=0)
-
+    data_loader = create_data_loader(data_dir, video_size, fps, max_num_frames, skip_frms_num=3, batch_size=batch_size, shuffle=True, num_workers=2)
+    tokenizer = CLIPTextTokenizer()
     for batch in data_loader:
         videos = batch["mp4"]
         captions = batch["txt"]
+        captions = tokenizer.tokenize(captions)
         print(videos.shape, captions)
