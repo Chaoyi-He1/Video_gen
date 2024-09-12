@@ -7,5 +7,3 @@ __pycache__
 .DS_Store
 /download/*
 /video/*
-/data/train/OpenVid-1M.csv
-/data/train/OpenVidHD.csv
