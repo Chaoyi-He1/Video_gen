@@ -2,15 +2,15 @@ import os
 import subprocess
 
 ### download openvid_files
-def download_files(output_directory, is_sample=True):
+def download_files(output_directory, max_files=186):
     zip_folder = os.path.join(output_directory, "download")
     video_folder = os.path.join(output_directory, "video")
     os.makedirs(zip_folder, exist_ok=True)
     os.makedirs(video_folder, exist_ok=True)
 
     error_log_path = os.path.join(zip_folder, "download_log.txt")
-    max_filess = 1 if is_sample else 186
-    for i in range(0, max_filess):
+    assert max_files <= 186, "max_files should be less than 186"
+    for i in range(0, max_files):
         url = f"https://huggingface.co/datasets/nkp37/OpenVid-1M/resolve/main/OpenVid_part{i}.zip"
         file_path = os.path.join(zip_folder, f"OpenVid_part{i}.zip")
         if os.path.exists(file_path):
@@ -66,4 +66,4 @@ def download_files(output_directory, is_sample=True):
         command = ["wget", "-O", data_path, data_url]
         subprocess.run(command, check=True)
 
-download_files("./", is_sample=True)
+download_files("./", max_files=1)

@@ -51,6 +51,5 @@ if __name__ == '__main__':
     tokenizer = CLIPTextTokenizer()
     for batch in data_loader:
         videos = batch["mp4"]
-        captions = batch["txt"]
-        captions = tokenizer.tokenize(captions)
+        captions = tokenizer.tokenize(batch["txt"])
         print(videos.shape, captions)
