@@ -40,7 +40,7 @@ def create_data_loader(data_dir, video_size, fps, max_num_frames, skip_frms_num=
 
 if __name__ == '__main__':
     # Example usage
-    data_dir = "train_data"
+    data_dir = "../data/train_data"
     video_size = (512, 512)  # Example size
     fps = 8
     max_num_frames = 32
