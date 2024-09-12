@@ -94,3 +94,9 @@ class SSM_video_gen(nn.Module):
         samples, _ = samples.chunk(2, dim=0)  # Remove null class samples
         return samples
     
+    def forward(self, video: torch.Tensor=None, **Token_text):
+        if self.training:
+            return self.forward_training(video, **Token_text)
+        else:
+            return self.forward_generation(**Token_text)
+        
