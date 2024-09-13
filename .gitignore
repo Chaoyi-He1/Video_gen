@@ -5,4 +5,4 @@ data/openvid-1m/data/train/OpenVid-1M.csv
 data/openvid-1m/data/train/OpenVidHD.csv
 __pycache__
 .DS_Store
-/data/train_data/*
+data/train_data/*
