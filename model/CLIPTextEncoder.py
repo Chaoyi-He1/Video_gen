@@ -25,7 +25,7 @@ def CreateTextEncoder(model_name="openai/clip-vit-large-patch16", freeze=False, 
 class SSM_input_projection(nn.Module):
     def __init__(self, config: dict):
         super(SSM_input_projection, self).__init__()
-        self.input_dim = config["input_dim"]
+        
         self.num_frames = config["num_frames"]
         
         self.textencoder = CreateTextEncoder(
@@ -34,8 +34,7 @@ class SSM_input_projection(nn.Module):
             projection=config["textencoder_projection"],
         )
         
-        assert self.input_dim == self.textencoder.config.hidden_size, \
-            f"input_dim should be {self.textencoder.config.hidden_size} but got {self.input_dim}"
+        self.input_dim = self.textencoder.config.hidden_size
         
         self.querries = nn.Conv1d(1, self.num_frames, 1)
         

@@ -6,3 +6,5 @@ data/openvid-1m/data/train/OpenVidHD.csv
 __pycache__
 .DS_Store
 data/train_data/*
+runs/*
+trained_models/*
