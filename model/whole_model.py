@@ -95,7 +95,7 @@ class SSM_video_gen(nn.Module):
         return samples
     
     def forward(self, video: torch.Tensor=None, **Token_text):
-        if self.training:
+        if self.training and video is not None:
             return self.forward_training(video, **Token_text)
         else:
             return self.forward_generation(**Token_text)
