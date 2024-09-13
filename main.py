@@ -23,6 +23,7 @@ import utils.misc as utils
 from dataloader import create_data_loader
 from model import SSM_video_gen
 from train_eval import *
+from diffusers.models import AutoencoderKL
 
 # the first flag below was False when we tested this script but True makes A100 training a lot faster:
 torch.backends.cuda.matmul.allow_tf32 = True
@@ -45,6 +46,7 @@ def parse_args():
                         help='directory to save checkpoints')
     
     # training parameters
+    parser.add_argument("--vae", type=str, choices=["ema", "mse"], default="ema")  # Choice doesn't affect training
     parser.add_argument('--seed', default=None, type=int,
                         help='seed for initializing training. ')
     parser.add_argument('--device', default='cuda', type=str,
@@ -114,3 +116,30 @@ def main(args):
     
     # create model
     model = SSM_video_gen(config, is_train=True).to(device)
+    vae = AutoencoderKL.from_pretrained(f"stabilityai/sd-vae-ft-{args.vae}").to(device)
+    
+    start_epoch = args.start_epoch
+    scaler = torch.cuda.amp.GradScaler(enabled=args.amp)
+    
+    # load checkpoint
+    if args.resume.endswith('.pth'):
+        print(f"Loading checkpoint: {args.resume}")
+        checkpoint = torch.load(args.resume, map_location='cpu')
+        
+        try:
+            model.load_state_dict(checkpoint['model'], strict=True)
+        except KeyError as e:
+            s = "%s is not compatible with %s. Specify --resume=.../model.pth" % (args.resume, args.config)
+            raise KeyError(s) from e
+        
+        start_epoch = checkpoint['epoch'] + 1
+        scaler.load_state_dict(checkpoint['scaler'])
+        del checkpoint
+        print(f"Loaded checkpoint: {args.resume}")
+    
+    # freeze text encoder if needed
+    if config["textencoder_freeze"]:
+        for n, p in model.textencoder.named_parameters():
+            if "textencoder" in n:
+                print(f"Freezing {n}, from {p.requires_grad} to False")
+                p.requires_grad = False

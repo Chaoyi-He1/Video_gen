@@ -40,6 +40,17 @@ class SSM_video_gen(nn.Module):
         self.dit_name = config["dit_name"]
         
         self.textencoder = SSM_input_projection(self.clip_config)
+        
+        if self.textencoder.textencoder.config.hidden_size != config["input_dim"]:
+            self.mamba_config["cin"] = self.textencoder.textencoder.config.hidden_size
+            self.mamba_config["cout"] = self.textencoder.textencoder.config.hidden_size
+            self.mamba_config["d_model"] = self.textencoder.textencoder.config.hidden_size
+            self.dit_config["latent_size"] = self.textencoder.textencoder.config.hidden_size
+            print("Warning: input_dim is not equal to the hidden_size of the text encoder. \
+                   input_dim={} is updated to hidden_size of the text encoder: {}.".format(
+                       config["input_dim"], 
+                       self.textencoder.textencoder.config.hidden_size))
+        
         self.mamba = BiMamba2_1D(**self.mamba_config)
         self.dit = DiT_models[self.dit_name](**self.dit_config)
         

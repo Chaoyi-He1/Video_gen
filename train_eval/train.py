@@ -3,13 +3,14 @@ import torch.nn as nn
 from utils.misc import *
 from typing import Iterable
 from dataloader.text_tokenizer import CLIPTextTokenizer
+from diffusers.models import AutoencoderKL
 
 
 def train_one_epoch(
     model: torch.nn.Module, tokenizer: CLIPTextTokenizer,
     data_loader: Iterable, optimizer: torch.optim.Optimizer,
     device: torch.device, epoch: int, max_norm: float = 0.01,
-    scaler=None, print_freq: int = 100
+    scaler=None, print_freq: int = 100, vae: AutoencoderKL = None,
 ):
     model.train()
     metric_logger = MetricLogger(delimiter="; ")
@@ -21,6 +22,9 @@ def train_one_epoch(
         videos = batch["mp4"].to(device)
         captions = tokenizer.tokenize(batch["txt"]).to(device)
         
+        with torch.cuda.amp.autocast(enabled=scaler is not None), torch.no_grad():
+            videos = torch.stack([vae.encode(videos[i]).latent_dist.sample().mul_(0.18215) 
+                                  for i in range(videos.shape[0])], dim=0) 
         with torch.cuda.amp.autocast(enabled=scaler is not None):
             loss_dict = model(videos, **captions)
             loss = loss_dict["loss"].mean()
