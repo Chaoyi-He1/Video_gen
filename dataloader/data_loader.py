@@ -35,7 +35,7 @@ def create_data_loader(data_dir, video_size, fps, max_num_frames, skip_frms_num=
         num_workers=num_workers
     )
 
-    return data_loader
+    return dataset, data_loader
 
 
 if __name__ == '__main__':

@@ -71,7 +71,7 @@ def parse_args():
                         help='learning rate factor')
     
     # distributed training parameters
-    parser.add_argument('--world_size', default=8, type=int,
+    parser.add_argument('--world_size', default=1, type=int,
                         help='number of distributed processes')
     parser.add_argument('--dist_url', default='env://', type=str,
                         help='url used to set up distributed training')
@@ -143,3 +143,51 @@ def main(args):
             if "textencoder" in n:
                 print(f"Freezing {n}, from {p.requires_grad} to False")
                 p.requires_grad = False
+                
+    # move to distributed mode
+    model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu])
+    model_without_ddp = model.module
+    
+    # create optimizer and scheduler and model info
+    p_to_optimize, n_p, n_p_o, layers = [], 0, 0, 0
+    for p in model.module.parameters():
+        n_p += p.numel()
+        if p.requires_grad:
+            p_to_optimize.append(p)
+            n_p_o += p.numel()
+            layers += 1
+    print(f"Total number of parameters: {n_p}, number of parameters to optimize: {n_p_o}, number of layers: {layers}")
+    
+    args.lr *= max(1., args.world_size * args.batch_size / 64)
+    optimizer = torch.optim.AdamW(p_to_optimize, lr=args.lr)
+    lf = lambda x: ((1 + math.cos(x * math.pi / args.epochs)) / 2) * (1 - args.lrf) + args.lrf
+    scheduler = lr_scheduler.LambdaLR(optimizer, lr_lambda=lf)
+    scheduler.last_epoch = start_epoch
+    
+    # create data loaders
+    dataset, _ = create_data_loader(
+        data_dir=config["data_dir"],
+        video_size=(config["video_height"], config["video_width"]),
+        fps=config["fps"],
+        max_num_frames=config["max_num_frames"],
+    )
+    sampler = torch.utils.data.distributed.DistributedSampler(
+        dataset,
+        num_replicas=dist.get_world_size(),
+        rank=args.rank,
+        shuffle=True,
+        seed=args.seed
+        )
+    nw = min([os.cpu_count(), int(args.batch_size // dist.get_world_size()) if int(args.batch_size // dist.get_world_size()) > 1 else 0, 8])  # number of workers
+    print(f"Using {nw} workers")
+    dataloader = torch.utils.data.DataLoader(
+        dataset,
+        batch_size=int(args.batch_size // dist.get_world_size()),
+        sampler=sampler,
+        num_workers=nw,
+        pin_memory=True,
+        drop_last=True,
+    )
+    
+    # start training
+    
