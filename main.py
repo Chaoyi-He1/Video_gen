@@ -190,4 +190,38 @@ def main(args):
     )
     
     # start training
+    start_time = time.time()
+    total_time = start_time
+    for epoch in range(start_epoch, args.epochs):
+        sampler.set_epoch(epoch)
+        loss_dict = train_one_epoch(model, vae, dataloader, optimizer, device, epoch, args.print_freq, scaler)
+        scheduler.step()
+        
+        # log to tensorboard
+        if args.rank in [-1, 0]:
+            for k, v in loss_dict.items():
+                writer.add_scalar(k, v, epoch)
+        
+        if args.rank in [-1, 0]:
+            if (epoch % args.save_freq == 0) or (epoch == args.epochs - 1):
+                utils.save_on_master({
+                    'model': model_without_ddp.state_dict(),
+                    'scaler': scaler.state_dict(),
+                    'optimizer': optimizer.state_dict(),
+                    'scheduler': scheduler.state_dict(),
+                    'epoch': epoch,
+                }, os.path.join(args.save_dir, f"model_{epoch}.pth"))
+        
+        if args.rank in [-1, 0]:
+            print(f"Epoch: {epoch}, Time: {time.time() - start_time}")
+            start_time = time.time()
     
+    total_time = time.time() - total_time
+    total_time_str = str(datetime.timedelta(seconds=int(total_time)))
+    if args.rank in [-1, 0]:
+        writer.close()
+        print(f"Training time {total_time_str}")
+
+if __name__ == '__main__':
+    args = parse_args()
+    main(args)
