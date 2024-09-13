@@ -42,8 +42,8 @@ if __name__ == '__main__':
     # Example usage
     data_dir = "../data/train_data"
     video_size = (512, 512)  # Example size
-    fps = 8
-    max_num_frames = 32
+    fps = 25
+    max_num_frames = 200
     batch_size = 1
     skip_frms_num = 3
 
@@ -51,5 +51,6 @@ if __name__ == '__main__':
     tokenizer = CLIPTextTokenizer()
     for batch in data_loader:
         videos = batch["mp4"]
+        print(videos.shape)
         captions = tokenizer.tokenize(batch["txt"])
-        print(videos.shape, captions)
+        # print(videos.shape, captions)
