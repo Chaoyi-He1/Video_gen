@@ -1,0 +1,15 @@
+# Parameters for video
+video_height: 512
+video_width: 512
+fps: 25
+max_frames: 350
+
+# Parameters for dataset
+data_dir: "data/train_data"
+
+# Parameters for model
+input_dim: 512
+num_frames: 350
+textencoder: "openai/clip-vit-large-patch32"  # "openai/clip-vit-base-patch32", "openai/clip-vit-base-patch16", "openai/clip-vit-large-patch32", "openai/clip-vit-large-patch16",
+textencoder_freeze: True
+textencoder_projection: True
