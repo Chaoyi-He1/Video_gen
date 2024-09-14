@@ -34,7 +34,7 @@ torch.multiprocessing.set_sharing_strategy('file_system')
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a model')
-    parser.add_argument('--config', default='config/config.yaml', type=str,
+    parser.add_argument('--config', default='config/cfg.yaml', type=str,
                         help='path to config file')
     parser.add_argument('opts', help='Modify config options using the command-line', default=None,
                         nargs=argparse.REMAINDER)
