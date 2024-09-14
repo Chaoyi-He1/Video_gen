@@ -20,7 +20,7 @@ import torch.optim.lr_scheduler as lr_scheduler
 import torch.multiprocessing
 
 import utils.misc as utils
-from dataloader import create_data_loader
+from dataloader import create_data_loader, CLIPTextTokenizer
 from model import SSM_video_gen
 from train_eval import *
 from diffusers.models import AutoencoderKL
@@ -116,6 +116,7 @@ def main(args):
     
     # create model
     model = SSM_video_gen(config, is_train=True).to(device)
+    tokenizer = CLIPTextTokenizer()
     vae = AutoencoderKL.from_pretrained(f"stabilityai/sd-vae-ft-{args.vae}").to(device)
     
     start_epoch = args.start_epoch
@@ -194,7 +195,11 @@ def main(args):
     total_time = start_time
     for epoch in range(start_epoch, args.epochs):
         sampler.set_epoch(epoch)
-        loss_dict = train_one_epoch(model, vae, dataloader, optimizer, device, epoch, args.print_freq, scaler)
+        loss_dict = train_one_epoch(
+            model=model, tokenizer=tokenizer, data_loader=dataloader,
+            optimizer=optimizer, device=device, epoch=epoch, max_norm=0.1,
+            scaler=scaler, print_freq=args.print_freq, vae=vae,
+        )
         scheduler.step()
         
         # log to tensorboard

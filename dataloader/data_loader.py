@@ -1,7 +1,7 @@
 import torch
 from torch.utils.data import DataLoader
-from data_video import SFTDataset
-from text_tokenizer import CLIPTextTokenizer
+from .data_video import SFTDataset
+from .text_tokenizer import CLIPTextTokenizer
 
 def create_data_loader(data_dir, video_size, fps, max_num_frames, skip_frms_num=3, batch_size=4, shuffle=True, num_workers=4):
     """
