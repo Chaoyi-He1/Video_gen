@@ -7,8 +7,8 @@ def CreateTextEncoder(model_name="openai/clip-vit-large-patch16", freeze=False, 
     model_candidate = [
         "openai/clip-vit-base-patch32",
         "openai/clip-vit-base-patch16",
-        "openai/clip-vit-large-patch32",
-        "openai/clip-vit-large-patch16",
+        "openai/clip-vit-large-patch14",
+        "openai/clip-vit-large-patch14-336",
     ]
     
     assert model_name in model_candidate, f"model_name should be one of {model_candidate}"

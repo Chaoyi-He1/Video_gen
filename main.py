@@ -116,7 +116,7 @@ def main(args):
     
     # create model
     model = SSM_video_gen(config, is_train=True).to(device)
-    tokenizer = CLIPTextTokenizer()
+    tokenizer = CLIPTextTokenizer(model_dir=config["textencoder"])
     vae = AutoencoderKL.from_pretrained(f"stabilityai/sd-vae-ft-{args.vae}").to(device)
     
     start_epoch = args.start_epoch
@@ -142,7 +142,8 @@ def main(args):
     if config["textencoder_freeze"]:
         for n, p in model.textencoder.named_parameters():
             if "textencoder" in n:
-                print(f"Freezing {n}, from {p.requires_grad} to False")
+                if p.requires_grad:
+                    print(f"Freezing {n}, from {p.requires_grad} to False")
                 p.requires_grad = False
                 
     # move to distributed mode
