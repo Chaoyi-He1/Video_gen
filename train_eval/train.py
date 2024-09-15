@@ -23,8 +23,8 @@ def train_one_epoch(
         captions = tokenizer.tokenize(batch["txt"]).to(device)
         
         with torch.cuda.amp.autocast(enabled=scaler is not None), torch.no_grad():
-            videos = torch.stack([vae.encode(videos[i]).latent_dist.sample().mul_(0.18215) 
-                                  for i in range(videos.shape[0])], dim=0) 
+            videos = torch.stack([vae.encode(videos[:, i, ...]).latent_dist.sample().mul_(0.18215) 
+                                  for i in range(videos.shape[1])], dim=1) 
         with torch.cuda.amp.autocast(enabled=scaler is not None):
             loss_dict = model(videos, **captions)
             loss = loss_dict["loss"].mean()
