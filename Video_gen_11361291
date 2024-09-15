@@ -1,0 +1,16 @@
+/scratch/user/chaoyi_he/Python_3_9/lib/python3.9/site-packages/transformers/utils/hub.py:127: FutureWarning: Using `TRANSFORMERS_CACHE` is deprecated and will be removed in v5 of Transformers. Use `HF_HOME` instead.
+  warnings.warn(
+/scratch/user/chaoyi_he/Python_3_9/lib/python3.9/site-packages/transformers/utils/hub.py:127: FutureWarning: Using `TRANSFORMERS_CACHE` is deprecated and will be removed in v5 of Transformers. Use `HF_HOME` instead.
+  warnings.warn(
+| distributed init (rank 0): env://
+| distributed init (rank 1): env://
+Namespace(config='config/cfg.yaml', opts=[], resume='', save_dir='trained_models/', vae='ema', seed=42, device='cuda', num_workers=4, batch_size=2, epochs=1000, start_epoch=0, print_freq=10, save_freq=100, lr=0.0001, lrf=0.1, world_size=2, dist_url='env://', amp=True, rank=0, gpu=0, distributed=True, dist_backend='nccl')
+/scratch/user/chaoyi_he/Python_3_9/lib/python3.9/site-packages/transformers/tokenization_utils_base.py:1601: FutureWarning: `clean_up_tokenization_spaces` was not set. It will be set to `True` by default. This behavior will be depracted in transformers v4.45, and will be then set to `False` by default. For more details check this issue: https://github.com/huggingface/transformers/issues/31884
+  warnings.warn(
+/scratch/user/chaoyi_he/Python_3_9/lib/python3.9/site-packages/transformers/tokenization_utils_base.py:1601: FutureWarning: `clean_up_tokenization_spaces` was not set. It will be set to `True` by default. This behavior will be depracted in transformers v4.45, and will be then set to `False` by default. For more details check this issue: https://github.com/huggingface/transformers/issues/31884
+  warnings.warn(
+/scratch/user/chaoyi_he/Video_gen/main.py:123: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Please use `torch.amp.GradScaler('cuda', args...)` instead.
+  scaler = torch.cuda.amp.GradScaler(enabled=args.amp)
+/scratch/user/chaoyi_he/Video_gen/main.py:123: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Please use `torch.amp.GradScaler('cuda', args...)` instead.
+  scaler = torch.cuda.amp.GradScaler(enabled=args.amp)
+Total number of parameters: 631999692, number of parameters to optimize: 508087244, number of layers: 365

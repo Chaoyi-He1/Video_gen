@@ -66,4 +66,5 @@ def download_files(output_directory, max_files=186):
         command = ["wget", "-O", data_path, data_url]
         subprocess.run(command, check=True)
 
-download_files("./", max_files=1)
+if __name__ == '__main__':
+    download_files("./", max_files=1)
