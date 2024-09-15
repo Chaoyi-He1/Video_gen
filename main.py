@@ -186,6 +186,7 @@ def main(args):
         dataset,
         batch_size=int(args.batch_size // dist.get_world_size()),
         sampler=sampler,
+        num_workers=nw,
         pin_memory=True,
         drop_last=True,
     )

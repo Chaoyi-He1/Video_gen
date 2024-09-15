@@ -15,7 +15,7 @@ input_dim: 768
 num_frames: 350
 textencoder: "openai/clip-vit-large-patch14"  # "openai/clip-vit-base-patch32", "openai/clip-vit-base-patch16", "openai/clip-vit-large-patch14", "openai/clip-vit-large-patch14-336",
 textencoder_freeze: True
-textencoder_projection: True
+textencoder_projection: False
 decoder_nhead: 4
 decoder_dim_feedforward: 2048
 decoder_dropout: 0.1
