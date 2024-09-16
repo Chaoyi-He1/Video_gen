@@ -2,9 +2,9 @@
 
 ##NECESSARY JOB SPECIFICATIONS
 #SBATCH --job-name=Video_gen         #Set the job name to "JobExample4"
-#SBATCH --time=4:00:00              #Set the wall clock limit to 1hr and 30min
-#SBATCH --ntasks=4                   #Request 1 task (CPU)
-#SBATCH --ntasks-per-node=4          #Request exactly (or max) of 28 tasks per node
+#SBATCH --time=24:00:00              #Set the wall clock limit to 1hr and 30min
+#SBATCH --ntasks=8                   #Request 1 task (CPU)
+#SBATCH --ntasks-per-node=8          #Request exactly (or max) of 28 tasks per node
 #SBATCH --mem=64G                    #Request 64GB per node
 #SBATCH --gres=gpu:a100:2            #Request 1 GPU per node can be 1 or 2, type=k80 or v100
 #SBATCH --partition=gpu              #Request the GPU partition/queue
@@ -22,7 +22,7 @@ module load Python/3.9.6
 module load CUDA/12.4
 cd /scratch/user/chaoyi_he
 source Python_3_9/bin/activate
-export TRANSFORMERS_CACHE=/scratch/user/chaoyi_he/torch_cache
+export HF_HOME=/scratch/user/chaoyi_he/torch_cache
 cd Video_gen/
 
 torchrun --nproc_per_node=2 main.py
