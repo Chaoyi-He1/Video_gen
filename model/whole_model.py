@@ -72,9 +72,22 @@ class SSM_video_gen(nn.Module):
         ssm_out = ssm_out.view(b*f, -1)
         video = video.view(b*f, c, h, w)
         
-        t = torch.randint(0, self.diffusion.num_timesteps, (video.shape[0],), device=video.device)
-        model_kwargs = dict(y=ssm_out)
-        loss_dict = self.diffusion.training_losses(self.dit, video, t, model_kwargs)
+        # Separate b*f samples into mini-batch of size 20
+        loss_dict = {}
+        for i in range(0, b*f, 20):
+            t = torch.randint(0, self.diffusion.num_timesteps, (20,), device=video.device)
+            model_kwargs = dict(y=ssm_out[i:i+20])
+            loss_dict_ = self.diffusion.training_losses(self.dit, video[i:i+20], t, model_kwargs)
+            for key, value in loss_dict_.items():
+                if key not in loss_dict:
+                    loss_dict[key] = value
+                else:
+                    loss_dict[key] += value
+        for key in loss_dict:
+            loss_dict[key] /= (b*f // 20)
+        # t = torch.randint(0, self.diffusion.num_timesteps, (video.shape[0],), device=video.device)
+        # model_kwargs = dict(y=ssm_out)
+        # loss_dict = self.diffusion.training_losses(self.dit, video, t, model_kwargs)
         return loss_dict
     
     def forward_generation(self, **Token_text):
