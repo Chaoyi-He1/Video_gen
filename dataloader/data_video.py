@@ -358,6 +358,7 @@ class SFTDataset(Dataset):
             num_frames = self.max_num_frames
             start = int(self.skip_frms_num)
             end = int(start + num_frames / self.fps * actual_fps)
+            end = end if end >= num_frames + start else num_frames + start
             end_safty = min(int(start + num_frames / self.fps * actual_fps), int(ori_vlen))
             indices = np.arange(start, end, (end - start) // num_frames).astype(int)
             temp_frms = vr.get_batch(np.arange(start, end_safty))
