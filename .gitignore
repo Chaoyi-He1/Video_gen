@@ -9,4 +9,4 @@ data/train_data/*
 runs/*
 trained_models/*
 test.py
-video_gen_*
+*.log
