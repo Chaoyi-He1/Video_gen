@@ -11,7 +11,7 @@ def train_one_epoch(
     data_loader: Iterable, optimizer: torch.optim.Optimizer,
     device: torch.device, epoch: int, max_norm: float = 0.01,
     scaler=None, print_freq: int = 100, vae: AutoencoderKL = None,
-    mini_frames: int = 10,
+    mini_frames: int = 50,
 ):
     model.train()
     metric_logger = MetricLogger(delimiter="; ")
