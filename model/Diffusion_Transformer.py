@@ -62,7 +62,7 @@ class LatentEmbedder(nn.Module):
             nn.Linear(hidden_size, hidden_size, bias=True),
         ) if latent_size != hidden_size else nn.Identity()
         
-        self.cfg_embedding = nn.Parameter(torch.randn(latent_size)) if use_cfg_embedding else None
+        self.cfg_embedding = nn.Parameter(torch.randn(1, latent_size)) if use_cfg_embedding else None
         self.dropout_prob = dropout_prob
         self.latent_size = latent_size
         self.hidden_size = hidden_size
@@ -75,7 +75,7 @@ class LatentEmbedder(nn.Module):
             drop_ids = torch.rand(latents.shape[0], device=latents.device) < self.dropout_prob
         else:
             drop_ids = force_drop_ids == 1
-        labels = torch.where(drop_ids, self.cfg_embedding, latents)
+        labels = torch.where(drop_ids.unsqueeze(1), latents, self.cfg_embedding.expand(latents.shape[0], -1))
         return labels
 
     def forward(self, latents, train, force_drop_ids=None):

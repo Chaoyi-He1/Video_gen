@@ -64,9 +64,9 @@ class SSM_video_gen(nn.Module):
         
         TextEncoderOutput = self.textencoder(**Token_text)
         
-        ssm_in = TextEncoderOutput.permute(0, 2, 1) # (batch, dim, num_frames)
+        ssm_in = TextEncoderOutput.permute(0, 2, 1).contiguous() # (batch, dim, num_frames)
         ssm_out = self.mamba(ssm_in)
-        ssm_out = ssm_out.permute(0, 2, 1)  # (batch, num_frames, dim)
+        ssm_out = ssm_out.permute(0, 2, 1).contiguous()  # (batch, num_frames, dim)
         
         # combine ssm_out first two dimensions, as well as video first two dimensions
         ssm_out = ssm_out.view(b*f, -1)
@@ -80,9 +80,9 @@ class SSM_video_gen(nn.Module):
     def forward_generation(self, **Token_text):
         TextEncoderOutput = self.textencoder(**Token_text)
         
-        ssm_in = TextEncoderOutput.permute(0, 2, 1) # (batch, dim, num_frames)
+        ssm_in = TextEncoderOutput.permute(0, 2, 1).contiguous() # (batch, dim, num_frames)
         ssm_out = self.mamba(ssm_in)
-        ssm_out = ssm_out.permute(0, 2, 1)  # (batch, num_frames, dim)
+        ssm_out = ssm_out.permute(0, 2, 1).contiguous()  # (batch, num_frames, dim)
         
         b, f, _ = ssm_out.shape
         # combine ssm_out first two dimensions, as well as video first two dimensions
