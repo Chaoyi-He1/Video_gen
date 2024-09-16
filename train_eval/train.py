@@ -11,6 +11,7 @@ def train_one_epoch(
     data_loader: Iterable, optimizer: torch.optim.Optimizer,
     device: torch.device, epoch: int, max_norm: float = 0.01,
     scaler=None, print_freq: int = 100, vae: AutoencoderKL = None,
+    mini_frames: int = 50,
 ):
     model.train()
     metric_logger = MetricLogger(delimiter="; ")
@@ -25,30 +26,47 @@ def train_one_epoch(
         with torch.cuda.amp.autocast(enabled=scaler is not None), torch.no_grad():
             videos = torch.stack([vae.encode(videos[:, i, ...]).latent_dist.sample().mul_(0.18215) 
                                   for i in range(videos.shape[1])], dim=1) 
-        with torch.cuda.amp.autocast(enabled=scaler is not None):
-            loss_dict = model(videos, **captions)
-            loss = loss_dict["loss"].mean()
-        
-            optimizer.zero_grad()
-            if scaler is not None:
-                scaler.scale(loss).backward()
-            else:
-                loss.backward()
             
-            if max_norm > 0:
+        b, f, c, h, w = videos.shape 
+        
+        # Loop over smaller mini-batches (chunks)
+        for i in range(0, b*f, mini_frames):
+            with torch.cuda.amp.autocast(enabled=scaler is not None):
+                # Move the forward pass inside the loop
+                ssm_out, video = model(videos, **captions)
+                
+                # Get a random timestep
+                t = torch.randint(0, model.module.diffusion.num_timesteps, (mini_frames,), device=video.device)
+
+                # Compute the loss
+                model_kwargs = dict(y=ssm_out[i: i + mini_frames])
+                loss_dict = model.module.diffusion.training_losses(model.module.dit, video[i: i + mini_frames], t, model_kwargs)
+                loss = loss_dict["loss"].mean()
+                
+                optimizer.zero_grad()
+                
+                # Backward pass
                 if scaler is not None:
-                    scaler.unscale_(optimizer)
-                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm)
-            
-            if scaler is not None:
-                scaler.step(optimizer)
-                scaler.update()
-            else:
-                optimizer.step()
-        
-        metric_logger.update(loss=loss.item())
-        metric_logger.update(lr=optimizer.param_groups[0]["lr"])
-        
+                    scaler.scale(loss).backward()
+                else:
+                    loss.backward()
+                
+                if max_norm > 0:
+                    if scaler is not None:
+                        scaler.unscale_(optimizer)
+                    torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm)
+                
+                # Optimizer step
+                if scaler is not None:
+                    scaler.step(optimizer)
+                    scaler.update()
+                else:
+                    optimizer.step()
+                
+                # Update metrics
+                metric_logger.update(loss=loss.item())
+                
+    metric_logger.update(lr=optimizer.param_groups[0]["lr"])    
     metric_logger.synchronize_between_processes()
     print("Averaged stats:", metric_logger)
     return {k: v.global_avg for k, v in metric_logger.meters.items()}
