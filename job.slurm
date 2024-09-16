@@ -8,7 +8,7 @@
 #SBATCH --mem=64G                    #Request 64GB per node
 #SBATCH --gres=gpu:a100:2            #Request 1 GPU per node can be 1 or 2, type=k80 or v100
 #SBATCH --partition=gpu              #Request the GPU partition/queue
-#SBATCH --output=Video_gen_%j        #Send stdout/err to "Example4Out.[jobID]"
+#SBATCH --output=Video_gen_%j.log    #Send stdout/err to "Example4Out.[jobID]"
 
 ##OPTIONAL JOB SPECIFICATIONS
 ##SBATCH --account=122768702865            #Set billing account to Terra:122768702865	Grace:132768702708
