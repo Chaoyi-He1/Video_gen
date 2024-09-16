@@ -60,7 +60,7 @@ class LatentEmbedder(nn.Module):
             nn.Linear(latent_size, hidden_size, bias=True),
             nn.SiLU(),
             nn.Linear(hidden_size, hidden_size, bias=True),
-        ) if latent_size != hidden_size else nn.Identity()
+        )
         
         self.cfg_embedding = nn.Parameter(torch.randn(1, latent_size)) if use_cfg_embedding else None
         self.dropout_prob = dropout_prob
