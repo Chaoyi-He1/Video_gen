@@ -181,7 +181,6 @@ def main(args):
         seed=args.seed
         )
     nw = min([os.cpu_count(), int(args.batch_size // dist.get_world_size()) if int(args.batch_size // dist.get_world_size()) > 1 else 0, 8])  # number of workers
-    print(f"Using {nw} workers")
     dataloader = torch.utils.data.DataLoader(
         dataset,
         batch_size=int(args.batch_size // dist.get_world_size()),
@@ -190,6 +189,7 @@ def main(args):
         pin_memory=True,
         drop_last=True,
     )
+    print(f"Using {nw} workers")
     
     # start training
     start_time = time.time()
