@@ -2,7 +2,7 @@
 video_height: 512
 video_width: 512
 fps: 25
-max_num_frames: 200
+max_num_frames: 250
 
 
 # Parameters for dataset

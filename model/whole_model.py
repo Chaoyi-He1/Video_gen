@@ -69,7 +69,7 @@ class SSM_video_gen(nn.Module):
         ssm_out = ssm_out.permute(0, 2, 1).contiguous()  # (batch, num_frames, dim)
         
         # combine ssm_out first two dimensions, as well as video first two dimensions
-        ssm_out = ssm_out.view(b*f, -1)
+        ssm_out = ssm_out.view(b*f, ssm_out.shape[-1])
         video = video.view(b*f, c, h, w)
         
         # # Separate b*f samples into mini-batch of size 20
