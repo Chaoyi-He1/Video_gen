@@ -159,10 +159,10 @@ class _BiMamba2(nn.Module):
                  chunk_size: int = 64,  # matrix partition size (Q)
                  ):
         super().__init__()
-        self.fc_in = nn.Linear(cin, d_model, bias=False)  # 调整通道数到cmid
-        self.mamba2_for = Mamba2(d_model, n_layer, d_state, d_conv, expand, headdim, chunk_size, )  # 正向
-        self.mamba2_back = Mamba2(d_model, n_layer, d_state, d_conv, expand, headdim, chunk_size, )  # 负向
-        self.fc_out = nn.Linear(d_model, cout, bias=False)  # 调整通道数到cout
+        self.fc_in = nn.Linear(cin, d_model, bias=False)  # adjust the number of channels to cmid
+        self.mamba2_for = Mamba2(d_model, n_layer, d_state, d_conv, expand, headdim, chunk_size, )  # positive
+        self.mamba2_back = Mamba2(d_model, n_layer, d_state, d_conv, expand, headdim, chunk_size, )  # negative
+        self.fc_out = nn.Linear(d_model, cout, bias=False)  # adjust the number of channels to cout
         self.chunk_size = chunk_size
 
     @abstractmethod
@@ -176,15 +176,15 @@ class BiMamba2_1D(_BiMamba2):
 
     def forward(self, x):
         l = x.shape[2]
-        x = F.pad(x, (0, (64 - x.shape[2] % 64) % 64))  # 将 l , pad到4的倍数, [b, c64,l4]
-        x = x.transpose(1, 2)  # 转成 1d 信号 [b, c64, d4*w4*h4]
-        x = self.fc_in(x)  # 调整通道数为目标通道数
+        x = F.pad(x, (0, (64 - x.shape[2] % 64) % 64))  # pad l to a multiple of 4, [b, c64,l4]
+        x = x.transpose(1, 2)  # convert to 1d signal [b, c64, d4*w4*h4]
+        x = self.fc_in(x)  # adjust the number of channels to the target number of channels
         x1 = self.mamba2_for(x)
         x2 = self.mamba2_back(x.flip(1)).flip(1)
         x = x1 + x2
-        x = self.fc_out(x)  # 调整通道数为目标通道数
+        x = self.fc_out(x)  # adjust the number of channels to the target number of channels
         x = x.transpose(1, 2)  # 转成 1d 信号 [b, c64, d4*w4*h4] ]
-        x = x[:, :, :l]  # 截取原图大小
+        x = x[:, :, :l]  # capture the original size
         return x
 
 
@@ -196,18 +196,18 @@ class BiMamba2_2D(_BiMamba2):
         h, w = x.shape[2:]
         x = F.pad(x, (0, (8 - x.shape[3] % 8) % 8,
                       0, (8 - x.shape[2] % 8) % 8)
-                  )  # 将 h , w  pad到8的倍数, [b, c64, h8, w8]
+                  )  # Pad h and w to multiples of 8, [b, c64, h8, w8]
         _b, _c, _h, _w = x.shape
         x = x.permute(0, 2, 3, 1).reshape(_b, _h * _w, _c)
-        x = self.fc_in(x)  # 调整通道数为目标通道数
+        x = self.fc_in(x)  # Adjust the number of channels to the target number of channels
         x1 = self.mamba2_for(x)
         x2 = self.mamba2_back(x.flip(1)).flip(1)
         x = x1 + x2
-        x = self.fc_out(x)  # 调整通道数为目标通道数
+        x = self.fc_out(x)  # adjust the number of channels to the target number of channels
         x = x.reshape(_b, _h, _w, -1, )
         x = x.permute(0, 3, 1, 2)
         x = x.reshape(_b, -1, _h, _w, )
-        x = x[:, :, :h, :w]  # 截取原图大小
+        x = x[:, :, :h, :w]  # capture the original size
         return x
 
 
@@ -220,18 +220,18 @@ class BiMamba2_3D(_BiMamba2):
         x = F.pad(x, (0, (4 - x.shape[4] % 4) % 4,
                       0, (4 - x.shape[3] % 4) % 4,
                       0, (4 - x.shape[2] % 4) % 4)
-                  )  # 将 d, h, w , pad到4的倍数, [b, c64,d4, h4, w4]
+                  )  # Pad d, h, w to multiples of 4, [b, c64,d4, h4, w4]
         _b, _c, _d, _h, _w = x.shape
         x = x.permute(0, 2, 3, 4, 1).reshape(_b, _d * _h * _w, _c)
-        x = self.fc_in(x)  # 调整通道数为目标通道数
+        x = self.fc_in(x)  # adjust the number of channels to the target number of channels
         x1 = self.mamba2_for(x)
         x2 = self.mamba2_back(x.flip(1)).flip(1)
         x = x1 + x2
-        x = self.fc_out(x)  # 调整通道数为目标通道数
+        x = self.fc_out(x)  # adjust the number of channels to the target number of channels
         x = x.reshape(_b, _d, _h, _w, -1)
         x = x.permute(0, 4, 1, 2, 3)
         x=x.reshape(_b, -1, _d, _h, _w, )
-        x = x[:, :, :d, :h, :w]  # 截取原图大小
+        x = x[:, :, :d, :h, :w]  # capture the original size
         return x
 
 
@@ -247,15 +247,15 @@ class BiMamba2(_BiMamba2):
         x = torch.flatten(x, 2)  # b c size
         l = x.shape[2]
         _s = self.chunk_size
-        x = F.pad(x, [0, (_s - x.shape[2] % _s) % _s])  # 将 l, pad到chunk_size的倍数, [b, c64,l4]
-        x = x.transpose(1, 2)  # 转成 1d 信号
-        x = self.fc_in(x)  # 调整通道数为目标通道数
+        x = F.pad(x, [0, (_s - x.shape[2] % _s) % _s])  # pad l to multiples of chunk_size, [b, c64,l4]
+        x = x.transpose(1, 2)  # Convert to 1d signal
+        x = self.fc_in(x)  # adjust the number of channels to the target number of channels
         x1 = self.mamba2_for(x)
         x2 = self.mamba2_back(x.flip(1)).flip(1)
         x = x1 + x2
-        x = self.fc_out(x)  # 调整通道数为目标通道数
-        x = x.transpose(1, 2)  # 转成 1d 信号
-        x = x[:, :, :l]  # 截取原图大小
+        x = self.fc_out(x)  # adjust the number of channels to the target number of channels
+        x = x.transpose(1, 2)  # Convert to 1d signal
+        x = x[:, :, :l]  # capture the original size
         x = x.reshape(out_size)
 
         return x
@@ -273,18 +273,18 @@ def test_export_jit_script(net, x):
 def test_export_onnx(net, x):
     torch.onnx.export(net,
                       x,
-                      "net.onnx",  # 输出的 ONNX 文件名
-                      export_params=True,  # 存储训练参数
-                      opset_version=14,  # 指定 ONNX 操作集版本
-                      do_constant_folding=False,  # 是否执行常量折叠优化
-                      input_names=['input'],  # 输入张量的名称
-                      output_names=['output'],  # 输出张量的名称
-                      dynamic_axes={'input': {0: 'batch_size'},  # 可变维度的字典
+                      "net.onnx",  # Output ONNX file name
+                      export_params=True,  # Storing training parameters
+                      opset_version=14,  # Specify ONNX Operation Set Version
+                      do_constant_folding=False,  # Whether to perform constant folding optimization
+                      input_names=['input'],  # The name of the input tensor
+                      output_names=['output'],  # The name of the output tensor
+                      dynamic_axes={'input': {0: 'batch_size'},  # Variable-dimensional dictionary
                                     'output': {0: 'batch_size'}})
 
 
 if __name__ == '__main__':
-    # 通用的多维度双向mamba2
+    # universal multi-dimensional bidirectional mamba2
     from .analysis_tools import (
         export_jit_script,
         export_onnx,

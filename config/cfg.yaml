@@ -1,7 +1,7 @@
 # Parameters for video
 video_height: 512
 video_width: 512
-fps: 25
+fps: 30
 max_num_frames: 250
 
 
