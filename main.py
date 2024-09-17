@@ -180,12 +180,12 @@ def main(args):
         shuffle=True,
         seed=args.seed
         )
-    nw = min([os.cpu_count(), int(args.batch_size // dist.get_world_size()) if int(args.batch_size // dist.get_world_size()) > 1 else 0, 8])  # number of workers
+    nw = min([os.cpu_count(), int(args.batch_size // dist.get_world_size()) if int(args.batch_size // dist.get_world_size()) > 1 else 0, 4])  # number of workers
     dataloader = torch.utils.data.DataLoader(
         dataset,
         batch_size=int(args.batch_size // dist.get_world_size()),
         sampler=sampler,
-        # num_workers=nw,
+        num_workers=nw,
         pin_memory=True,
         drop_last=True,
     )
