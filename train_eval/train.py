@@ -24,6 +24,8 @@ def train_one_epoch(
         captions = tokenizer.tokenize(batch["txt"]).to(device)
         
         b, f, c, h, w = videos.shape
+        assert b*f % mini_frames == 0, f"Batch x Frames ({b*f}) should be divisible by mini_frames ({mini_frames})"
+        
         with torch.cuda.amp.autocast(enabled=scaler is not None), torch.no_grad():
             videos = videos.view(b*f, c, h, w)
             for i in range(0, b*f, mini_frames):
