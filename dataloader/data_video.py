@@ -344,7 +344,7 @@ class SFTDataset(Dataset):
                     
                     vr = VideoReader(uri=video_path, height=-1, width=-1, ctx=self.decord_ctx)
                     actual_fps = vr.get_avg_fps()
-                    if actual_fps < self.fps and self.max_num_frames + 3 > len(vr):
+                    if actual_fps < self.fps and min(int(self.skip_frms_num + self.max_num_frames / self.fps * actual_fps), len(vr)) < self.max_num_frames + self.skip_frms_num:
                         continue
                     
                     self.video_paths.append(video_path)
