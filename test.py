@@ -6,6 +6,7 @@ import os
 from dataloader import create_data_loader, CLIPTextTokenizer
 import yaml
 import torch.utils.data
+from tqdm import tqdm
 
 
 if __name__ == "__main__":
@@ -25,5 +26,5 @@ if __name__ == "__main__":
         sampler=sampler,
         drop_last=False)
     
-    for batch in loader:
+    for batch in tqdm(loader):
         pass
