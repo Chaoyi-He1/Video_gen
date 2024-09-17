@@ -375,7 +375,7 @@ class SFTDataset(Dataset):
                 num_frames = self.max_num_frames
                 start = int(self.skip_frms_num)
                 end = int(ori_vlen - self.skip_frms_num)
-                indices = np.arange(start, end, max((end - start) // num_frames, 1)).astype(int)  # Fix here
+                indices = np.linspace(start, end - 1, num_frames).astype(int)
                 temp_frms = vr.get_batch(np.arange(start, end))
                 assert temp_frms is not None
                 tensor_frms = (
