@@ -43,4 +43,5 @@
            R0915,  # Too many statements
            W0511,  # TODO/FIXME comments
            C0411,
-           W0718
+           W0718,
+           W1514

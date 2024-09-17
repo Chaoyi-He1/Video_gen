@@ -10,3 +10,4 @@ runs/*
 trained_models/*
 test.py
 *.log
+data/train_npy/*

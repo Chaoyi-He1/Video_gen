@@ -6,6 +6,7 @@ from dataloader import create_data_loader, CLIPTextTokenizer
 import yaml
 import torch.utils.data
 from tqdm import tqdm
+import numpy as np
 
 
 if __name__ == "__main__":
@@ -19,9 +20,10 @@ if __name__ == "__main__":
         fps=config["fps"],
         max_num_frames=config["max_num_frames"],
     )
+
     sampler = torch.utils.data.SequentialSampler(dataset)
     loader = torch.utils.data.DataLoader(
-        dataset, batch_size=8,
+        dataset, batch_size=1,
         sampler=sampler, num_workers=0,
         drop_last=False)
     
