@@ -9,9 +9,9 @@ from diffusers.models import AutoencoderKL
 def train_one_epoch(
     model: torch.nn.Module, tokenizer: CLIPTextTokenizer,
     data_loader: Iterable, optimizer: torch.optim.Optimizer,
-    device: torch.device, epoch: int, max_norm: float = 0.01,
+    device: torch.device, epoch: int, max_norm: float = 0.1,
     scaler=None, print_freq: int = 100, vae: AutoencoderKL = None,
-    mini_frames: int = 100,
+    mini_frames: int = 200,
 ):
     model.train()
     metric_logger = MetricLogger(delimiter="; ")
@@ -23,11 +23,17 @@ def train_one_epoch(
         videos = batch["mp4"].to(device)
         captions = tokenizer.tokenize(batch["txt"]).to(device)
         
+        b, f, c, h, w = videos.shape
+        assert b*f % mini_frames == 0, f"Batch x Frames ({b*f}) should be divisible by mini_frames ({mini_frames})"
+        
         with torch.cuda.amp.autocast(enabled=scaler is not None), torch.no_grad():
-            videos = torch.stack([vae.encode(videos[:, i, ...]).latent_dist.sample().mul_(0.18215) 
-                                  for i in range(videos.shape[1])], dim=1) 
+            videos = videos.view(b*f, c, h, w)
+            for i in range(0, b*f, mini_frames):
+                
+                videos = torch.cat([vae.encode(videos[i: i+mini_frames, ...]).latent_dist.sample().mul_(0.18215) 
+                                    for i in range(videos.shape[1])], dim=0) 
             
-        b, f, c, h, w = videos.shape 
+            videos = videos.view(b, f, c+1, h//8, w//8)
         
         # Loop over smaller mini-batches (chunks)
         for i in range(0, b*f, mini_frames):
