@@ -5,13 +5,22 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python Debugger: Current File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "test.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+        },
+        {
             "name": "Python Debugger: Current File with Arguments",
             "type": "debugpy",
             "request": "launch",
             "program": "/home/grads/c/chaoyi_he/Desktop/python3.8_env/bin/torchrun",
             "console": "integratedTerminal",
             "args": [
-                "--nproc_per_node", "2",
+                "--nproc_per_node",
+                "2",
                 "main.py",
             ]
         }

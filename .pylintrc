@@ -1,0 +1,46 @@
+   [MASTER]
+   # Specify a configuration file.
+   #rcfile=
+
+   # Python code to execute, usually for sys.path manipulation such as
+   # pygtk.require().
+   #init-hook=
+
+   # Add files or directories to the blacklist. They should be base names, not
+   # paths.
+   ignore=CVS
+
+   # Add files or directories matching the regex patterns to the blacklist. The
+   # regex matches against base names, not paths.
+   ignore-patterns=
+
+   # Python version to use for parsing the code. This can be used to emulate
+   # different python versions for the analysis. Default is the current
+   # interpreter minor version.
+   py-version=3.8
+
+   [MESSAGES CONTROL]
+   # Only show warnings with the listed confidence levels. Leave empty to show
+   # all. Valid levels: HIGH, INFERENCE, INFERENCE_FAILURE, UNDEFINED
+   confidence=
+
+   # Enable the message, report, category or checker with the given id(s). You
+   # can either give multiple identifier separated by comma (,) or put this
+   # option multiple times (only on the command line, not in the configuration
+   # file where it should appear only once). See also the "--disable" option
+   # for examples.
+   enable=all
+
+   # Disable the message, report, category or checker with the given id(s). You
+   # can either give multiple identifiers separated by comma (,) or put this
+   # option multiple times (only on the command line, not in the configuration
+   # file where it should appear only once).
+   disable=C0111,  # Missing docstring
+           C0103,  # Variable name doesn't conform to snake_case naming style
+           R0903,  # Too few public methods
+           R0913,  # Too many arguments
+           R0914,  # Too many local variables
+           R0915,  # Too many statements
+           W0511,  # TODO/FIXME comments
+           C0411,
+           W0718

@@ -26,4 +26,4 @@ if __name__ == "__main__":
         drop_last=False)
     
     for batch in tqdm(loader):
-        print(batch)
+        shape = batch["mp4"].shape
