@@ -1,7 +1,7 @@
 import torch
 from torch.utils.data import DataLoader
-from .data_video import SFTDataset
-from .text_tokenizer import CLIPTextTokenizer
+from data_video import SFTDataset
+from text_tokenizer import CLIPTextTokenizer
 
 def create_data_loader(data_dir, video_size, fps, max_num_frames, skip_frms_num=3, batch_size=4, shuffle=True, num_workers=4):
     """
@@ -20,7 +20,7 @@ def create_data_loader(data_dir, video_size, fps, max_num_frames, skip_frms_num=
     Returns:
         DataLoader: A DataLoader for the SFTDataset.
     """
-    dataset = SFTDataset(
+    dataset = SFTDatawset(
         data_dir=data_dir,
         video_size=video_size,
         fps=fps,
@@ -47,10 +47,18 @@ if __name__ == '__main__':
     batch_size = 1
     skip_frms_num = 3
 
-    data_loader = create_data_loader(data_dir, video_size, fps, max_num_frames, skip_frms_num=3, batch_size=batch_size, shuffle=True, num_workers=2)
+    dataset, data_loader = create_data_loader(data_dir, video_size, fps, max_num_frames, skip_frms_num=3, batch_size=batch_size, shuffle=True, num_workers=2)
     tokenizer = CLIPTextTokenizer()
-    for batch in data_loader:
-        videos = batch["mp4"] # it should be like this [1, 200, 3, 512, 512]
-        print(videos.shape) 
-        captions = tokenizer.tokenize(batch["txt"])
+    
+    # Test the __getitem__ function
+    for i in range(10000):
+        sample_index = i  
+        sample = dataset[sample_index]
+        print("Sample video shape:", sample["mp4"].shape)
+        print("Sample text:", sample["txt"])
+    
+    # for batch in data_loader:
+        # videos = batch["mp4"] # it should be like this [1, 200, 3, 512, 512]
+        # print(videos.shape) 
+        # captions = tokenizer.tokenize(batch["txt"])
         # print(videos.shape, captions)

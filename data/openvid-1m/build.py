@@ -43,6 +43,7 @@ def build_dataset(is_sample=True, is_HD=False):
     video_source_dir = "./video"
     
     labels_dir, videos_dir = create_directories(base_dir)
+    print(csv_path)
     process_csv(csv_path, labels_dir, videos_dir, video_source_dir)
 
 if __name__ == '__main__':
