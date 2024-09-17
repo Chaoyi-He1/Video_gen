@@ -53,7 +53,7 @@ def parse_args():
                         help='device to use for training / testing')
     parser.add_argument('--num_workers', default=4, type=int,
                         help='number of data loading workers')
-    parser.add_argument('--batch_size', default=16, type=int,
+    parser.add_argument('--batch_size', default=8, type=int,
                         help='input batch size for training')
     parser.add_argument('--epochs', default=1000, type=int,
                         help='number of epochs to train')
@@ -185,7 +185,7 @@ def main(args):
         dataset,
         batch_size=int(args.batch_size // dist.get_world_size()),
         sampler=sampler,
-        num_workers=nw,
+        # num_workers=nw,
         pin_memory=True,
         drop_last=True,
     )
