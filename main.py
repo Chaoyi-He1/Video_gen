@@ -53,7 +53,7 @@ def parse_args():
                         help='device to use for training / testing')
     parser.add_argument('--num_workers', default=4, type=int,
                         help='number of data loading workers')
-    parser.add_argument('--batch_size', default=4, type=int,
+    parser.add_argument('--batch_size', default=16, type=int,
                         help='input batch size for training')
     parser.add_argument('--epochs', default=1000, type=int,
                         help='number of epochs to train')
@@ -200,6 +200,7 @@ def main(args):
             model=model, tokenizer=tokenizer, data_loader=dataloader,
             optimizer=optimizer, device=device, epoch=epoch, max_norm=0.1,
             scaler=scaler, print_freq=args.print_freq, vae=vae,
+            mini_frames=config["mini_frames"],
         )
         scheduler.step()
         
