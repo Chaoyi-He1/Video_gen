@@ -1,6 +1,5 @@
 import torch
 from transformers import CLIPTextModelWithProjection, CLIPTextModel, AutoTokenizer
-from diffusers.models import AutoencoderKL
 from transformers import CLIPTokenizer
 import os
 from dataloader import create_data_loader, CLIPTextTokenizer
@@ -27,4 +26,4 @@ if __name__ == "__main__":
         drop_last=False)
     
     for batch in tqdm(loader):
-        pass
+        print(batch)

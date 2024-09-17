@@ -327,6 +327,12 @@ class SFTDataset(Dataset):
         self.fps = fps
         self.max_num_frames = max_num_frames
         self.skip_frms_num = skip_frms_num
+        try:
+            assert torch.cuda.is_available(), "GPU is not available"
+            self.decord_ctx = decord.gpu()
+        except Exception as e:
+            print(f"Failed to initialize decord.gpu(), falling back to decord.cpu(): {e}")
+            self.decord_ctx = decord.cpu()
 
         self.video_paths = []
         self.captions = []
@@ -336,7 +342,7 @@ class SFTDataset(Dataset):
                 if filename.endswith(".mp4"):
                     video_path = os.path.join(root, filename)
                     
-                    vr = VideoReader(uri=video_path, height=-1, width=-1)
+                    vr = VideoReader(uri=video_path, height=-1, width=-1, ctx=self.decord_ctx)
                     actual_fps = vr.get_avg_fps()
                     if actual_fps < self.fps and self.max_num_frames + 3 > len(vr):
                         continue
@@ -357,10 +363,10 @@ class SFTDataset(Dataset):
         decord.bridge.set_bridge("torch")
 
         video_path = self.video_paths[index]
-        vr = VideoReader(uri=video_path, height=-1, width=-1)
+        vr = VideoReader(uri=video_path, height=-1, width=-1, ctx=self.decord_ctx)
         actual_fps = vr.get_avg_fps()
         ori_vlen = len(vr)
-
+        print(ori_vlen)
         if ori_vlen / actual_fps * self.fps > self.max_num_frames:
             num_frames = self.max_num_frames
             start = int(self.skip_frms_num)
