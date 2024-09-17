@@ -338,7 +338,7 @@ class SFTDataset(Dataset):
                     
                     vr = VideoReader(uri=video_path, height=-1, width=-1)
                     actual_fps = vr.get_avg_fps()
-                    if actual_fps < self.fps:
+                    if actual_fps < self.fps and self.max_num_frames + 3 > len(vr):
                         continue
                     
                     self.video_paths.append(video_path)
@@ -370,6 +370,8 @@ class SFTDataset(Dataset):
             temp_frms = vr.get_batch(np.arange(start, end_safty))
             assert temp_frms is not None
             tensor_frms = torch.from_numpy(temp_frms) if type(temp_frms) is not torch.Tensor else temp_frms
+            if max((indices - start)) >= len(tensor_frms):
+                print(f"Index out of range: {video_path}")
             tensor_frms = tensor_frms[torch.tensor((indices - start).tolist())]
         else:
             if ori_vlen > self.max_num_frames:
