@@ -332,7 +332,7 @@ class SFTDataset(Dataset):
         self.captions = []
 
         for root, dirnames, filenames in os.walk(data_dir):
-            for filename in tqdm(filenames):
+            for filename in filenames:
                 if filename.endswith(".mp4"):
                     video_path = os.path.join(root, filename)
                     
