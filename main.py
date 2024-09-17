@@ -61,7 +61,7 @@ def parse_args():
                         help='start epoch')
     parser.add_argument('--print_freq', default=100, type=int,
                         help='print frequency')
-    parser.add_argument('--save_freq', default=100, type=int,
+    parser.add_argument('--save_freq', default=10, type=int,
                         help='save frequency')
     
     # optimizer parameters

@@ -33,4 +33,4 @@ dit_in_channels: 4
 dit_learn_sigma: True
 
 # Training parameters
-mini_frames: 40
+mini_frames: 50
