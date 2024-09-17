@@ -148,6 +148,7 @@ def main(args):
                 
     # move to distributed mode
     model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu])
+    vae = torch.nn.parallel.DistributedDataParallel(vae, device_ids=[args.gpu])
     model_without_ddp = model.module
     
     # create optimizer and scheduler and model info
@@ -180,7 +181,7 @@ def main(args):
         shuffle=True,
         seed=args.seed
         )
-    nw = min([os.cpu_count(), int(args.batch_size // dist.get_world_size()) if int(args.batch_size // dist.get_world_size()) > 1 else 0, 4])  # number of workers
+    nw = min([os.cpu_count(), int(args.batch_size // dist.get_world_size()) if int(args.batch_size // dist.get_world_size()) > 1 else 0, 2])  # number of workers
     dataloader = torch.utils.data.DataLoader(
         dataset,
         batch_size=int(args.batch_size // dist.get_world_size()),

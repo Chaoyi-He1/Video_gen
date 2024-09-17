@@ -28,7 +28,7 @@ def train_one_epoch(
         
         with torch.cuda.amp.autocast(enabled=scaler is not None), torch.no_grad():
             videos = videos.view(b*f, c, h, w)
-            videos = torch.cat([vae.encode(videos[i: i+mini_frames, ...]).latent_dist.sample().mul_(0.18215) 
+            videos = torch.cat([vae.module.encode(videos[i: i+mini_frames, ...]).latent_dist.sample().mul_(0.18215) 
                                 for i in range(0, b*f, mini_frames)], dim=0) 
             
             videos = videos.view(b, f, c+1, h//8, w//8)
