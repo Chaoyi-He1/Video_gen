@@ -9,9 +9,9 @@ from diffusers.models import AutoencoderKL
 def train_one_epoch(
     model: torch.nn.Module, tokenizer: CLIPTextTokenizer,
     data_loader: Iterable, optimizer: torch.optim.Optimizer,
-    device: torch.device, epoch: int, max_norm: float = 0.01,
+    device: torch.device, epoch: int, max_norm: float = 0.1,
     scaler=None, print_freq: int = 100, vae: AutoencoderKL = None,
-    mini_frames: int = 100,
+    mini_frames: int = 200,
 ):
     model.train()
     metric_logger = MetricLogger(delimiter="; ")
