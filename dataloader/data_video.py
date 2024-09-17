@@ -11,7 +11,11 @@ from torchvision.io.video import av
 import numpy as np
 import torch
 from torchvision.io import _video_opt
-from torchvision.io.video import _check_av_available, _read_from_stream, _align_audio_frames
+from torchvision.io.video import (
+    _check_av_available,
+    _read_from_stream,
+    _align_audio_frames,
+)
 from torchvision.transforms.functional import center_crop, resize
 from torchvision.transforms import InterpolationMode
 import decord
@@ -48,7 +52,9 @@ def read_video(
 
     output_format = output_format.upper()
     if output_format not in ("THWC", "TCHW"):
-        raise ValueError(f"output_format should be either 'THWC' or 'TCHW', got {output_format}.")
+        raise ValueError(
+            f"output_format should be either 'THWC' or 'TCHW', got {output_format}."
+        )
 
     _check_av_available()
 
@@ -56,7 +62,9 @@ def read_video(
         end_pts = float("inf")
 
     if end_pts < start_pts:
-        raise ValueError(f"end_pts should be larger than start_pts, got start_pts={start_pts} and end_pts={end_pts}")
+        raise ValueError(
+            f"end_pts should be larger than start_pts, got start_pts={start_pts} and end_pts={end_pts}"
+        )
 
     info = {}
     audio_frames = []
@@ -139,7 +147,9 @@ def resize_for_rectangle_crop(arr, image_size, reshape_mode="random"):
         top, left = delta_h // 2, delta_w // 2
     else:
         raise NotImplementedError
-    arr = TT.functional.crop(arr, top=top, left=left, height=image_size[0], width=image_size[1])
+    arr = TT.functional.crop(
+        arr, top=top, left=left, height=image_size[0], width=image_size[1]
+    )
     return arr
 
 
@@ -186,7 +196,11 @@ def load_video(
     # get_batch -> T, H, W, C
     temp_frms = vr.get_batch(np.arange(start, end))
     assert temp_frms is not None
-    tensor_frms = torch.from_numpy(temp_frms) if type(temp_frms) is not torch.Tensor else temp_frms
+    tensor_frms = (
+        torch.from_numpy(temp_frms)
+        if type(temp_frms) is not torch.Tensor
+        else temp_frms
+    )
     tensor_frms = tensor_frms[torch.tensor((indices - start).tolist())]
 
     return pad_last_frame(tensor_frms, num_frames)
@@ -252,7 +266,9 @@ def process_video(
     return video
 
 
-def process_fn_video(src, image_size, fps, num_frames, skip_frms_num=0.0, txt_key="caption"):
+def process_fn_video(
+    src, image_size, fps, num_frames, skip_frms_num=0.0, txt_key="caption"
+):
     while True:
         r = next(src)
         if "mp4" in r:
@@ -322,17 +338,11 @@ class SFTDataset(Dataset):
         skip_frms_num: ignore the first and the last xx frames, avoiding transitions.
         """
         super(SFTDataset, self).__init__()
-        
+
         self.video_size = video_size
         self.fps = fps
         self.max_num_frames = max_num_frames
         self.skip_frms_num = skip_frms_num
-        try:
-            assert torch.cuda.is_available(), "GPU is not available"
-            self.decord_ctx = decord.gpu()
-        except Exception as e:
-            print(f"Failed to initialize decord.gpu(), falling back to decord.cpu(): {e}")
-            self.decord_ctx = decord.cpu()
 
         self.video_paths = []
         self.captions = []
@@ -341,54 +351,55 @@ class SFTDataset(Dataset):
             for filename in tqdm(filenames):
                 if filename.endswith(".mp4"):
                     video_path = os.path.join(root, filename)
-                    
-                    vr = VideoReader(uri=video_path, height=-1, width=-1, ctx=self.decord_ctx)
-                    actual_fps = vr.get_avg_fps()
-                    if actual_fps < self.fps and min(int(self.skip_frms_num + self.max_num_frames / self.fps * actual_fps), len(vr)) < self.max_num_frames + self.skip_frms_num:
-                        continue
-                    
                     self.video_paths.append(video_path)
 
-                    caption_path = video_path.replace(".mp4", ".txt").replace("videos", "labels")
+                    caption_path = video_path.replace(".mp4", ".txt").replace(
+                        "videos", "labels"
+                    )
                     if os.path.exists(caption_path):
                         caption = open(caption_path, "r").read().splitlines()[0]
                     else:
                         caption = ""
                     self.captions.append(caption)
-        print(f"Found {len(self.video_paths)} videos")
-        print(f"Found {len(self.captions)} captions")
 
     def __getitem__(self, index):
-        
         decord.bridge.set_bridge("torch")
 
         video_path = self.video_paths[index]
-        vr = VideoReader(uri=video_path, height=-1, width=-1, ctx=self.decord_ctx)
+        vr = VideoReader(uri=video_path, height=-1, width=-1)
         actual_fps = vr.get_avg_fps()
         ori_vlen = len(vr)
-        print(ori_vlen)
+
         if ori_vlen / actual_fps * self.fps > self.max_num_frames:
             num_frames = self.max_num_frames
             start = int(self.skip_frms_num)
             end = int(start + num_frames / self.fps * actual_fps)
-            end_safty = min(int(start + num_frames / self.fps * actual_fps), int(ori_vlen))
-            indices = np.linspace(start, end - 1, num_frames).astype(int)
+            end_safty = min(
+                int(start + num_frames / self.fps * actual_fps), int(ori_vlen)
+            )
+            indices = np.arange(start, end, max((end - start) // num_frames, 1)).astype(int)
             temp_frms = vr.get_batch(np.arange(start, end_safty))
             assert temp_frms is not None
-            tensor_frms = torch.from_numpy(temp_frms) if type(temp_frms) is not torch.Tensor else temp_frms
-            if max((indices - start)) >= len(tensor_frms):
-                print(f"Index out of range: {video_path}")
+            tensor_frms = (
+                torch.from_numpy(temp_frms)
+                if type(temp_frms) is not torch.Tensor
+                else temp_frms
+            )
             tensor_frms = tensor_frms[torch.tensor((indices - start).tolist())]
         else:
             if ori_vlen > self.max_num_frames:
                 num_frames = self.max_num_frames
                 start = int(self.skip_frms_num)
                 end = int(ori_vlen - self.skip_frms_num)
-                indices = np.linspace(start, end - 1, num_frames).astype(int)
+                indices = np.arange(
+                    start, end, max((end - start) // num_frames, 1)
+                ).astype(int)
                 temp_frms = vr.get_batch(np.arange(start, end))
                 assert temp_frms is not None
                 tensor_frms = (
-                    torch.from_numpy(temp_frms) if type(temp_frms) is not torch.Tensor else temp_frms
+                    torch.from_numpy(temp_frms)
+                    if type(temp_frms) is not torch.Tensor
+                    else temp_frms
                 )
                 tensor_frms = tensor_frms[torch.tensor((indices - start).tolist())]
             else:
@@ -409,14 +420,18 @@ class SFTDataset(Dataset):
                 temp_frms = vr.get_batch(np.arange(start, end))
                 assert temp_frms is not None
                 tensor_frms = (
-                    torch.from_numpy(temp_frms) if type(temp_frms) is not torch.Tensor else temp_frms
+                    torch.from_numpy(temp_frms)
+                    if type(temp_frms) is not torch.Tensor
+                    else temp_frms
                 )
 
         tensor_frms = pad_last_frame(
             tensor_frms, self.max_num_frames
         )  # the len of indices may be less than num_frames, due to round error
         tensor_frms = tensor_frms.permute(0, 3, 1, 2)  # [T, H, W, C] -> [T, C, H, W]
-        tensor_frms = resize_for_rectangle_crop(tensor_frms, self.video_size, reshape_mode="center")
+        tensor_frms = resize_for_rectangle_crop(
+            tensor_frms, self.video_size, reshape_mode="center"
+        )
         tensor_frms = (tensor_frms - 127.5) / 127.5
 
         item = {
