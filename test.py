@@ -1,15 +1,26 @@
-from diffusion import create_diffusion
 import torch
+from transformers import CLIPTextModelWithProjection, CLIPTextModel, AutoTokenizer
+from diffusers.models import AutoencoderKL
+from transformers import CLIPTokenizer
+import os
+
 
 if __name__ == "__main__":
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    diffusion = create_diffusion(timestep_respacing="")
+    os.environ['TRANSFORMERS_CACHE'] = '/scratch/user/chaoyi_he/torch_cache'
+    model = CLIPTextModelWithProjection.from_pretrained("openai/clip-vit-large-patch14")
+    model = CLIPTextModelWithProjection.from_pretrained("openai/clip-vit-large-patch14-336")
+    model = CLIPTextModelWithProjection.from_pretrained("openai/clip-vit-base-patch16")
+    model = CLIPTextModelWithProjection.from_pretrained("openai/clip-vit-base-patch32")
     
-    from transformers import AutoTokenizer, CLIPTextModel
-
-    model = CLIPTextModel.from_pretrained("openai/clip-vit-base-patch32")
-    tokenizer = AutoTokenizer.from_pretrained("openai/clip-vit-base-patch32")
-
-    inputs = tokenizer(["a photo of a cat", "a photo of a dog"], padding=True, return_tensors="pt")
-    inputs_ = tokenizer(["a photo of a cat", "a photo of a dog"], padding=True, return_tensors="pt")
-    pass
+    # model = CLIPTextModel.from_pretrained("openai/clip-vit-large-patch14")
+    # model = CLIPTextModel.from_pretrained("openai/clip-vit-large-patch14-336")
+    # model = CLIPTextModel.from_pretrained("openai/clip-vit-base-patch16")
+    # model = CLIPTextModel.from_pretrained("openai/clip-vit-base-patch32")
+    
+    tokenizer = CLIPTokenizer.from_pretrained("openai/clip-vit-large-patch14")
+    tokenizer = CLIPTokenizer.from_pretrained("openai/clip-vit-large-patch14-336")
+    tokenizer = CLIPTokenizer.from_pretrained("openai/clip-vit-base-patch16")
+    tokenizer = CLIPTokenizer.from_pretrained("openai/clip-vit-base-patch32")
+    
+    vae = AutoencoderKL.from_pretrained("stabilityai/sd-vae-ft-ema")
+    vae = AutoencoderKL.from_pretrained("stabilityai/sd-vae-ft-mse")

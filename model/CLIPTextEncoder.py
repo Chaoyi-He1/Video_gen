@@ -7,8 +7,8 @@ def CreateTextEncoder(model_name="openai/clip-vit-large-patch16", freeze=False, 
     model_candidate = [
         "openai/clip-vit-base-patch32",
         "openai/clip-vit-base-patch16",
-        "openai/clip-vit-large-patch32",
-        "openai/clip-vit-large-patch16",
+        "openai/clip-vit-large-patch14",
+        "openai/clip-vit-large-patch14-336",
     ]
     
     assert model_name in model_candidate, f"model_name should be one of {model_candidate}"
@@ -25,7 +25,7 @@ def CreateTextEncoder(model_name="openai/clip-vit-large-patch16", freeze=False, 
 class SSM_input_projection(nn.Module):
     def __init__(self, config: dict):
         super(SSM_input_projection, self).__init__()
-        self.input_dim = config["input_dim"]
+        
         self.num_frames = config["num_frames"]
         
         self.textencoder = CreateTextEncoder(
@@ -34,12 +34,11 @@ class SSM_input_projection(nn.Module):
             projection=config["textencoder_projection"],
         )
         
-        assert self.input_dim == self.textencoder.config.hidden_size, \
-            f"input_dim should be {self.textencoder.config.hidden_size} but got {self.input_dim}"
+        self.input_dim = self.textencoder.config.hidden_size
         
         self.querries = nn.Conv1d(1, self.num_frames, 1)
         
-        self.decoder_layer = nn.TransformerDecoderLayer(
+        decoder_layer = nn.TransformerDecoderLayer(
             d_model=self.textencoder.config.hidden_size,
             nhead=config["decoder_nhead"],
             dim_feedforward=config["decoder_dim_feedforward"],
@@ -47,16 +46,16 @@ class SSM_input_projection(nn.Module):
             activation=config["decoder_activation"],
         )
         self.projection_block = nn.TransformerDecoder(
-            self.decoder_layer, 
+            decoder_layer, 
             num_layers=config["decoder_num_layers"]
         )
     
     def forward(self, **Token_text):
         TextEncoderOutput = self.textencoder(**Token_text)
-        last_hidden_state = TextEncoderOutput.last_hidden_state
+        last_hidden_state = TextEncoderOutput.last_hidden_state.permute(1, 0, 2).contiguous()
         pooled_output = TextEncoderOutput.pooler_output
         
-        querries = self.querries(pooled_output.unsqueeze(1)).permute(1, 0, 2)
+        querries = self.querries(pooled_output.unsqueeze(1)).permute(1, 0, 2).contiguous()
         
         tgt_mask = (1 - torch.tril(torch.ones(self.num_frames, self.num_frames))).bool().to(querries.device)
         
@@ -66,4 +65,4 @@ class SSM_input_projection(nn.Module):
             tgt_mask=tgt_mask
         )
         
-        return SSM_input
+        return SSM_input.permute(1, 0, 2).contiguous()

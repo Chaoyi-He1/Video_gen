@@ -1,0 +1,33 @@
+# Parameters for video
+video_height: 512
+video_width: 512
+fps: 20
+max_num_frames: 250
+
+
+# Parameters for dataset
+data_dir: "data/train_data"
+
+
+# Parameters for model
+# clip model
+input_dim: 768
+num_frames: 250
+textencoder: "openai/clip-vit-large-patch14"  # "openai/clip-vit-base-patch32", "openai/clip-vit-base-patch16", "openai/clip-vit-large-patch14", "openai/clip-vit-large-patch14-336",
+textencoder_freeze: True
+textencoder_projection: False
+decoder_nhead: 4
+decoder_dim_feedforward: 2048
+decoder_dropout: 0.1
+decoder_activation: "gelu"
+decoder_num_layers: 4
+
+# mamba model
+mamba_n_layer: 24
+mamba_d_state: 512
+
+# DiT model
+dit_name: "DiT-B/2"
+dit_input_size: 64  # img_size // 8
+dit_in_channels: 4
+dit_learn_sigma: True

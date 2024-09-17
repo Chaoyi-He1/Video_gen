@@ -60,9 +60,9 @@ class LatentEmbedder(nn.Module):
             nn.Linear(latent_size, hidden_size, bias=True),
             nn.SiLU(),
             nn.Linear(hidden_size, hidden_size, bias=True),
-        ) if latent_size != hidden_size else nn.Identity()
+        )
         
-        self.cfg_embedding = nn.Parameter(torch.randn(latent_size)) if use_cfg_embedding else None
+        self.cfg_embedding = nn.Parameter(torch.randn(1, latent_size)) if use_cfg_embedding else None
         self.dropout_prob = dropout_prob
         self.latent_size = latent_size
         self.hidden_size = hidden_size
@@ -75,7 +75,7 @@ class LatentEmbedder(nn.Module):
             drop_ids = torch.rand(latents.shape[0], device=latents.device) < self.dropout_prob
         else:
             drop_ids = force_drop_ids == 1
-        labels = torch.where(drop_ids, self.cfg_embedding, latents)
+        labels = torch.where(drop_ids.unsqueeze(1), latents, self.cfg_embedding.expand(latents.shape[0], -1))
         return labels
 
     def forward(self, latents, train, force_drop_ids=None):
@@ -187,7 +187,9 @@ class DiT(nn.Module):
         nn.init.constant_(self.x_embedder.proj.bias, 0)
 
         # Initialize label embedding table:
-        nn.init.normal_(self.y_embedder.embedding_table.weight, std=0.02)
+        for layer in self.y_embedder.projection:
+            if hasattr(layer, 'weight'):
+                nn.init.normal_(layer.weight, std=0.02)       
 
         # Initialize timestep embedding MLP:
         nn.init.normal_(self.t_embedder.mlp[0].weight, std=0.02)

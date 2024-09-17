@@ -34,15 +34,16 @@ def process_csv(csv_path, labels_dir, videos_dir, video_source_dir):
 
 def build_dataset(is_sample=True, is_HD=False):
     base_dir = "../train_data"
-    csv_path = "data/train/Openvid-1M.csv"
+    csv_path = "data/train/OpenVid-1M.csv"
     if is_sample:
-        csv_path = "data/train/Openvid-1M-sample.csv"
+        csv_path = "data/train/OpenVid-1M-sample.csv"
     if is_HD:
-        csv_path = "data/train/OpenvidHD.csv"
+        csv_path = "data/train/OpenVidHD.csv"
         
     video_source_dir = "./video"
     
     labels_dir, videos_dir = create_directories(base_dir)
     process_csv(csv_path, labels_dir, videos_dir, video_source_dir)
 
-build_dataset(is_sample=True, is_HD=False)
+if __name__ == '__main__':
+    build_dataset(is_sample=False, is_HD=False)

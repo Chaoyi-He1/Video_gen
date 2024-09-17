@@ -40,6 +40,17 @@ class SSM_video_gen(nn.Module):
         self.dit_name = config["dit_name"]
         
         self.textencoder = SSM_input_projection(self.clip_config)
+        
+        if self.textencoder.textencoder.config.hidden_size != config["input_dim"]:
+            self.mamba_config["cin"] = self.textencoder.textencoder.config.hidden_size
+            self.mamba_config["cout"] = self.textencoder.textencoder.config.hidden_size
+            self.mamba_config["d_model"] = self.textencoder.textencoder.config.hidden_size
+            self.dit_config["latent_size"] = self.textencoder.textencoder.config.hidden_size
+            print("Warning: input_dim is not equal to the hidden_size of the text encoder. \
+                   input_dim={} is updated to hidden_size of the text encoder: {}.".format(
+                       config["input_dim"], 
+                       self.textencoder.textencoder.config.hidden_size))
+        
         self.mamba = BiMamba2_1D(**self.mamba_config)
         self.dit = DiT_models[self.dit_name](**self.dit_config)
         
@@ -53,25 +64,38 @@ class SSM_video_gen(nn.Module):
         
         TextEncoderOutput = self.textencoder(**Token_text)
         
-        ssm_in = TextEncoderOutput.permute(0, 2, 1) # (batch, dim, num_frames)
+        ssm_in = TextEncoderOutput.permute(0, 2, 1).contiguous() # (batch, dim, num_frames)
         ssm_out = self.mamba(ssm_in)
-        ssm_out = ssm_out.permute(0, 2, 1)  # (batch, num_frames, dim)
+        ssm_out = ssm_out.permute(0, 2, 1).contiguous()  # (batch, num_frames, dim)
         
         # combine ssm_out first two dimensions, as well as video first two dimensions
-        ssm_out = ssm_out.view(b*f, -1)
+        ssm_out = ssm_out.view(b*f, ssm_out.shape[-1])
         video = video.view(b*f, c, h, w)
         
-        t = torch.randint(0, self.diffusion.num_timesteps, (video.shape[0],), device=video.device)
-        model_kwargs = dict(y=ssm_out)
-        loss_dict = self.diffusion.training_losses(self.dit, video, t, model_kwargs)
-        return loss_dict
+        # # Separate b*f samples into mini-batch of size 20
+        # loss_dict = {}
+        # for i in range(0, b*f, 5):
+        #     t = torch.randint(0, self.diffusion.num_timesteps, (5,), device=video.device)
+        #     model_kwargs = dict(y=ssm_out[i:i+5])
+        #     loss_dict_ = self.diffusion.training_losses(self.dit, video[i:i+5], t, model_kwargs)
+        #     for key, value in loss_dict_.items():
+        #         if key not in loss_dict:
+        #             loss_dict[key] = value
+        #         else:
+        #             loss_dict[key] += value
+        # for key in loss_dict:
+        #     loss_dict[key] /= (b*f // 5)
+        # t = torch.randint(0, self.diffusion.num_timesteps, (video.shape[0],), device=video.device)
+        # model_kwargs = dict(y=ssm_out)
+        # loss_dict = self.diffusion.training_losses(self.dit, video, t, model_kwargs)
+        return ssm_out, video
     
     def forward_generation(self, **Token_text):
         TextEncoderOutput = self.textencoder(**Token_text)
         
-        ssm_in = TextEncoderOutput.permute(0, 2, 1) # (batch, dim, num_frames)
+        ssm_in = TextEncoderOutput.permute(0, 2, 1).contiguous() # (batch, dim, num_frames)
         ssm_out = self.mamba(ssm_in)
-        ssm_out = ssm_out.permute(0, 2, 1)  # (batch, num_frames, dim)
+        ssm_out = ssm_out.permute(0, 2, 1).contiguous()  # (batch, num_frames, dim)
         
         b, f, _ = ssm_out.shape
         # combine ssm_out first two dimensions, as well as video first two dimensions
