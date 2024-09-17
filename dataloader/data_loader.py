@@ -20,7 +20,7 @@ def create_data_loader(data_dir, video_size, fps, max_num_frames, skip_frms_num=
     Returns:
         DataLoader: A DataLoader for the SFTDataset.
     """
-    dataset = SFTDatawset(
+    dataset = SFTDataset(
         data_dir=data_dir,
         video_size=video_size,
         fps=fps,
