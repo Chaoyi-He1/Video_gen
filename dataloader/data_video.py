@@ -336,10 +336,10 @@ class SFTDataset(Dataset):
                 if filename.endswith(".mp4"):
                     video_path = os.path.join(root, filename)
                     
-                    vr = VideoReader(uri=video_path, height=-1, width=-1)
-                    actual_fps = vr.get_avg_fps()
-                    if actual_fps < self.fps:
-                        continue
+                    # vr = VideoReader(uri=video_path, height=-1, width=-1)
+                    # actual_fps = vr.get_avg_fps()
+                    # if actual_fps < self.fps:
+                    #     continue
                     
                     self.video_paths.append(video_path)
 
