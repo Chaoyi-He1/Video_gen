@@ -17,6 +17,7 @@ from torchvision.transforms import InterpolationMode
 import decord
 from decord import VideoReader
 from torch.utils.data import Dataset
+from tqdm import tqdm
 
 
 def read_video(
@@ -331,7 +332,7 @@ class SFTDataset(Dataset):
         self.captions = []
 
         for root, dirnames, filenames in os.walk(data_dir):
-            for filename in filenames:
+            for filename in tqdm(filenames, desc="Working on ${dirnames}"):
                 if filename.endswith(".mp4"):
                     video_path = os.path.join(root, filename)
                     
