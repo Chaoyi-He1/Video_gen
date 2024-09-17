@@ -346,10 +346,20 @@ class SFTDataset(Dataset):
 
         self.video_paths = []
         self.captions = []
+        try:
+            assert torch.cuda.is_available(), "GPU is not available"
+            self.decord_ctx = decord.gpu()
+        except Exception as e:
+            print(
+                f"Failed to initialize decord.gpu(), falling back to decord.cpu(): {e}"
+            )
+            self.decord_ctx = decord.cpu()
 
         for root, dirnames, filenames in os.walk(data_dir):
             for filename in tqdm(filenames):
                 if filename.endswith(".mp4"):
+                    if filename != "1817.mp4":
+                        continue
                     video_path = os.path.join(root, filename)
                     self.video_paths.append(video_path)
 
@@ -361,12 +371,13 @@ class SFTDataset(Dataset):
                     else:
                         caption = ""
                     self.captions.append(caption)
+        print("Found video pairs: ", len(self.video_paths))
 
     def __getitem__(self, index):
         decord.bridge.set_bridge("torch")
 
         video_path = self.video_paths[index]
-        vr = VideoReader(uri=video_path, height=-1, width=-1)
+        vr = VideoReader(uri=video_path, height=-1, width=-1, ctx=self.decord_ctx)
         actual_fps = vr.get_avg_fps()
         ori_vlen = len(vr)
 
@@ -377,7 +388,9 @@ class SFTDataset(Dataset):
             end_safty = min(
                 int(start + num_frames / self.fps * actual_fps), int(ori_vlen)
             )
-            indices = np.arange(start, end, max((end - start) // num_frames, 1)).astype(int)
+            indices = np.arange(start, end, max((end - start) // num_frames, 1)).astype(
+                int
+            )
             temp_frms = vr.get_batch(np.arange(start, end_safty))
             assert temp_frms is not None
             tensor_frms = (
