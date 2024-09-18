@@ -36,4 +36,4 @@ if __name__ == "__main__":
         video_name = batch["video_name"][0]
         if len(mp4) > 0:
             if not os.path.exists(os.path.join(save_dir, f"{video_name}.npz")) or overwrite:
-                np.savez_compressed(os.path.join(save_dir, f"{video_name}.pt"), array=mp4)
+                np.savez_compressed(os.path.join(save_dir, f"{video_name}.npz"), array=mp4)
