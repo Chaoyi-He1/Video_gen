@@ -12,7 +12,7 @@ import os
 
 if __name__ == "__main__":
     config = "config/cfg.yaml"
-    save_dir = "data/train_data/videos_pt"
+    save_dir = "data/train_data/videos_pt_low"
     overwrite = False
     with open(config) as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
