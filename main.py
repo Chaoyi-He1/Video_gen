@@ -196,7 +196,7 @@ def main(args):
         sampler.set_epoch(epoch)
         loss_dict = train_one_epoch(
             model=model, tokenizer=tokenizer, data_loader=dataloader,
-            optimizer=optimizer, device=device, epoch=epoch, max_norm=0.1,
+            optimizer=optimizer, device=device, epoch=epoch, max_norm=0.01,
             scaler=scaler, print_freq=args.print_freq, vae=vae,
             mini_frames=config["mini_frames"],
         )
