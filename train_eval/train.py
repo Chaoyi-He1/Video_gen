@@ -48,6 +48,10 @@ def train_one_epoch(
                 loss_dict = model.module.diffusion.training_losses(model.module.dit, video[i: i + mini_frames], t, model_kwargs)
                 loss = loss_dict["loss"].mean()
                 
+                if loss.isnan():
+                    print("NaN loss")
+                    continue
+                
                 optimizer.zero_grad()
                 
                 # Backward pass
