@@ -63,21 +63,32 @@ class SFTDataset(Dataset):
         return len(self.video_paths)
 
     def __getitem__(self, index):
-        video_path = self.video_paths[index]
-        caption = self.captions[index]
-        frames = self._load_video_frames(video_path)
+        try:
+            video_path = self.video_paths[index]
+            caption = self.captions[index]
+            frames = self._load_video_frames(video_path)
 
-        frames = pad_last_frame(frames, self.max_num_frames)
-        frames = frames.permute(0, 3, 1, 2)  # [T, H, W, C] -> [T, C, H, W]
-        frames = resize_for_rectangle_crop(frames, self.video_size, reshape_mode="center")
-        frames = (frames - 127.5) / 127.5  # Normalize to [-1, 1]
-
-        return {
-            "mp4": frames,
-            "txt": caption,
-            "num_frames": frames.size(0),
-            "fps": self.fps,
-        }
+            frames = pad_last_frame(frames, self.max_num_frames)
+            frames = frames.permute(0, 3, 1, 2)  # [T, H, W, C] -> [T, C, H, W]
+            frames = resize_for_rectangle_crop(frames, self.video_size, reshape_mode="center")
+            frames = (frames - 127.5) / 127.5  # Normalize to [-1, 1]
+            video_name = video_path.split("/")[-1]
+            return {
+                "mp4": frames,
+                "txt": caption,
+                "num_frames": frames.size(0),
+                "fps": self.fps,
+                "video_name": video_name
+            }
+        except Exception:
+            print("Skip video ", self.video_paths[index])
+            return {
+                "mp4": None,
+                "txt": None,
+                "num_frames": None,
+                "fps": self.fps,
+                "video_name": None
+            }
 
     def _load_video_frames(self, video_path):
         decord.bridge.set_bridge("torch")

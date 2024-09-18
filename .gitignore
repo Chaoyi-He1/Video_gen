@@ -11,3 +11,4 @@ trained_models/*
 test.py
 *.log
 data/train_npy/*
+data/train_data/videos_npy
