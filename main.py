@@ -69,6 +69,8 @@ def parse_args():
                         help='initial learning rate')
     parser.add_argument('--lrf', default=0.1, type=float,
                         help='learning rate factor')
+    parser.add_argument('--clip_max_norm', default=0.05, type=float,
+                        help='gradient clipping max norm')
     
     # distributed training parameters
     parser.add_argument('--world_size', default=1, type=int,
@@ -196,7 +198,7 @@ def main(args):
         sampler.set_epoch(epoch)
         loss_dict = train_one_epoch(
             model=model, tokenizer=tokenizer, data_loader=dataloader,
-            optimizer=optimizer, device=device, epoch=epoch, max_norm=0.01,
+            optimizer=optimizer, device=device, epoch=epoch, max_norm=args.clip_max_norm,
             scaler=scaler, print_freq=args.print_freq, vae=vae,
             mini_frames=config["mini_frames"],
         )
