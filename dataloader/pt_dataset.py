@@ -1,5 +1,6 @@
 import torch
 import os
+import numpy as np
 
 
 class PTDataset(torch.utils.data.Dataset):
@@ -23,7 +24,7 @@ class PTDataset(torch.utils.data.Dataset):
         return captions
 
     def _load_caption(self, file_path):
-        caption_path = file_path.replace(".mp4.pt", ".txt").replace(
+        caption_path = file_path.replace(".mp4.npz", ".txt").replace(
             "videos_pt", "labels"
         )
         if os.path.exists(caption_path):
@@ -35,6 +36,8 @@ class PTDataset(torch.utils.data.Dataset):
         return len(self.file_paths)
 
     def __getitem__(self, idx):
-        mp4 = torch.load(self.file_paths[idx])
+        # mp4 = torch.load(self.file_paths[idx])
+        mp4 = np.load(self.file_paths[idx])["array"]
+        mp4 = (torch.from_numpy(mp4) - 127.5) / 127.5
         caption = self.captions[idx]
         return {"mp4": mp4, "txt": caption, "num_frames": mp4.size(0)}
