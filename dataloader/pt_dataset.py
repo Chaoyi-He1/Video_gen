@@ -40,6 +40,8 @@ class PTDataset(torch.utils.data.Dataset):
         mp4 = np.load(self.file_paths[idx])["array"]
         mp4 = (torch.from_numpy(mp4) - 127.5) / 127.5
         # refill the nan values with 0
-        mp4[mp4.isnan()] = 0
+        if torch.isnan(mp4).any():
+            print(f"Found NaN values in {self.file_paths[idx]}")
+            mp4[mp4.isnan()] = 0
         caption = self.captions[idx]
         return {"mp4": mp4, "txt": caption, "num_frames": mp4.size(0)}
