@@ -12,7 +12,7 @@ class PTDataset(torch.utils.data.Dataset):
         self.file_paths = [
             os.path.join(self.pt_dir, f)
             for f in os.listdir(self.pt_dir)
-            if f.endswith(".pt")
+            if f.endswith(".npz")
         ]
         self.captions = self._load_captions(self.file_paths)
 

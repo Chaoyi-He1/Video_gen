@@ -20,7 +20,7 @@ import torch.optim.lr_scheduler as lr_scheduler
 import torch.multiprocessing
 
 import utils.misc as utils
-from dataloader import create_data_loader, CLIPTextTokenizer
+from dataloader import create_data_loader, CLIPTextTokenizer, PTDataset
 from model import SSM_video_gen
 from train_eval import *
 from diffusers.models import AutoencoderKL
@@ -53,7 +53,7 @@ def parse_args():
                         help='device to use for training / testing')
     parser.add_argument('--num_workers', default=4, type=int,
                         help='number of data loading workers')
-    parser.add_argument('--batch_size', default=4, type=int,
+    parser.add_argument('--batch_size', default=8, type=int,
                         help='input batch size for training')
     parser.add_argument('--epochs', default=1000, type=int,
                         help='number of epochs to train')
@@ -168,11 +168,8 @@ def main(args):
     scheduler.last_epoch = start_epoch
     
     # create data loaders
-    dataset, _ = create_data_loader(
-        data_dir=config["data_dir"],
-        video_size=(config["video_height"], config["video_width"]),
-        fps=config["fps"],
-        max_num_frames=config["max_num_frames"],
+    dataset = PTDataset(
+        data_dir=config["data_dir"]
     )
     sampler = torch.utils.data.distributed.DistributedSampler(
         dataset,
