@@ -71,7 +71,7 @@ class SFTDataset(Dataset):
             frames = pad_last_frame(frames, self.max_num_frames)
             frames = frames.permute(0, 3, 1, 2)  # [T, H, W, C] -> [T, C, H, W]
             frames = resize_for_rectangle_crop(frames, self.video_size, reshape_mode="center")
-            frames = (frames - 127.5) / 127.5  # Normalize to [-1, 1]
+            # frames = (frames - 127.5) / 127.5  # Normalize to [-1, 1]
             video_name = video_path.split("/")[-1]
             return {
                 "mp4": frames,
