@@ -51,6 +51,7 @@ def train_one_epoch(
                 
                 if loss.isnan():
                     print("NaN loss")
+                    optimizer.zero_grad()
                     continue
                 
                 optimizer.zero_grad()
