@@ -4,6 +4,7 @@ from utils.misc import *
 from typing import Iterable
 from dataloader.text_tokenizer import CLIPTextTokenizer
 from diffusers.models import AutoencoderKL
+import torch.amp
 
 
 def train_one_epoch(
@@ -26,7 +27,7 @@ def train_one_epoch(
         b, f, c, h, w = videos.shape
         assert b*f % mini_frames == 0, f"Batch x Frames ({b*f}) should be divisible by mini_frames ({mini_frames})"
         
-        with torch.cuda.amp.autocast(enabled=scaler is not None), torch.no_grad():
+        with torch.amp.autocast('cuda', enabled=scaler is not None), torch.no_grad():
             videos = videos.view(b*f, c, h, w)
             videos = torch.cat([vae.module.encode(videos[i: i+mini_frames, ...]).latent_dist.sample().mul_(0.18215) 
                                 for i in range(0, b*f, mini_frames)], dim=0) 
@@ -35,7 +36,7 @@ def train_one_epoch(
         
         # Loop over smaller mini-batches (chunks)
         for i in range(0, b*f, mini_frames):
-            with torch.cuda.amp.autocast(enabled=scaler is not None):
+            with torch.amp.autocast('cuda', enabled=scaler is not None):
                 # Move the forward pass inside the loop
                 ssm_out, video = model(videos, **captions)
                 

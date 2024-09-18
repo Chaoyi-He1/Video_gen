@@ -120,7 +120,7 @@ def main(args):
     vae = AutoencoderKL.from_pretrained(f"stabilityai/sd-vae-ft-{args.vae}").to(device)
     
     start_epoch = args.start_epoch
-    scaler = torch.cuda.amp.GradScaler(enabled=args.amp)
+    scaler = scaler = torch.amp.GradScaler('cuda', enabled=args.amp) if args.amp else None
     
     # load checkpoint
     if args.resume.endswith('.pth'):
