@@ -6,7 +6,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1                   #Request 1 task (CPU)
 #SBATCH --cpus-per-task=8            #Request exactly (or max) of 28 tasks per node
-#SBATCH --partition=gpu-research     
+#SBATCH -p gpu-research     
 #SBATCH --gres=gpu:a100:2            #Request 1 GPU per node can be 1 or 2, type=k80 or v100
 #SBATCH --partition=gpu              #Request the GPU partition/queue
 #SBATCH --qos=olympus-research-gpu
