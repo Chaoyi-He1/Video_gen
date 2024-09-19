@@ -10,6 +10,7 @@ runs/*
 trained_models/*
 test.py
 *.log
+*.err
 data/train_npy/*
 data/train_data/videos_npy
 sample/*
