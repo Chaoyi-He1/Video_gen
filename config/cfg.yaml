@@ -27,7 +27,7 @@ mamba_n_layer: 24
 mamba_d_state: 512
 
 # DiT model
-dit_name: "DiT-L/4"
+dit_name: "DiT-L/8"
 dit_input_size: 64  # img_size // 8
 dit_in_channels: 4
 dit_learn_sigma: True
