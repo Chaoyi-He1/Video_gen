@@ -12,15 +12,10 @@
 #SBATCH --qos=olympus-research-gpu-sh    # Set QOS to use
 #SBATCH --time=04:00:00                  # Time limit hrs:min:sec - set to 1 hour
 
-# enter your commands below
-# set woring directory if different than current directory
+## enter your commands below
 cd /mnt/shared-scratch/Katehi_L/chaoyi_he/Video_gen/
 
-# Start anaconda shell (if needed)
-
-# Activate conda environment
 source /mnt/shared-scratch/Katehi_L/chaoyi_he/Conda_env/bin/activate
 conda activate 3_9_env
 
-# Run Python 
 torchrun --nproc_per_node=2 main.py 2>&1 output.log
