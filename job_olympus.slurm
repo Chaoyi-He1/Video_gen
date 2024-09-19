@@ -1,21 +1,27 @@
-#!/bin/sh
-#SBATCH --job-name=Gpu_Batch             # Job name
-#SBATCH -o video_gen.log       	   	 # output file name    
-#SBATCH -e video_gen.err          	 # error file name
-#SBATCH --mail-type=NONE                 # Mail events (NONE, BEGIN, END, FAIL, ALL)
-#SBATCH --mail-user=chaoyi_he@tamu.edu   # Where to send mail
-#SBATCH --nodes=1                        # Use one node
-#SBATCH --ntasks=1                       # Run a single task
-#SBATCH --cpus-per-task=8                # Number of CPU cores per task
-#SBATCH --gres=gpu:a100:2                # Type and number of GPUs 
-#SBATCH --partition=gpu-research         # Partition/Queue to run in
-#SBATCH --qos=olympus-research-gpu-sh    # Set QOS to use
-#SBATCH --time=04:00:00                  # Time limit hrs:min:sec - set to 1 hour
+#!/bin/bash
 
-## enter your commands below
+##NECESSARY JOB SPECIFICATIONS
+#SBATCH --job-name=Video_gen         #Set the job name to "JobExample4"
+#SBATCH --time=04:00:00              #Set the wall clock limit to 1hr and 30min
+#SBATCH --nodes=1
+#SBATCH --ntasks=1                   #Request 1 task (CPU)
+#SBATCH --cpus-per-task=8            #Request exactly (or max) of 28 tasks per node
+#SBATCH --partition=gpu-research     
+#SBATCH --gres=gpu:a100:2            #Request 1 GPU per node can be 1 or 2, type=k80 or v100
+#SBATCH --partition=gpu              #Request the GPU partition/queue
+#SBATCH --qos=olympus-research-gpu
+#SBATCH -o Video_gen_%j.log          #Send stdout/err to "Example4Out.[jobID]"
+#SBATCH -e Video_gen_%j.err
+
+##OPTIONAL JOB SPECIFICATIONS
+##SBATCH --account=122768702865            #Set billing account to Terra:122768702865	Grace:132768702708
+##SBATCH --mail-type=ALL              	   #Send email on all job events
+##SBATCH --mail-user=chaoyi_he@tamu.edu    #Send all emails to email_address 
+
+#First Executable Line
+
 cd /mnt/shared-scratch/Katehi_L/chaoyi_he/Video_gen/
-
 source /mnt/shared-scratch/Katehi_L/chaoyi_he/Conda_env/bin/activate
-conda activate 3_9_env
+conda active 3_9_env
 
-torchrun --nproc_per_node=2 main.py 2>&1 output.log
+torchrun --nproc_per_node=2 main.py
