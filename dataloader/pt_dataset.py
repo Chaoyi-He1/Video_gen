@@ -6,7 +6,7 @@ import numpy as np
 class PTDataset(torch.utils.data.Dataset):
     def __init__(self, data_dir):
         self.data_dir = data_dir
-        self.pt_dir = os.path.join(self.data_dir, "videos_pt")
+        self.pt_dir = os.path.join(self.data_dir, "videos_pt_low")
         self.labels_dir = os.path.join(self.data_dir, "labels")
         # List all .pt files in the directory
         self.file_paths = [
