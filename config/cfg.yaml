@@ -2,7 +2,7 @@
 video_height: 512
 video_width: 512
 fps: 8
-max_num_frames: 40
+max_num_frames: 56
 
 
 # Parameters for dataset
@@ -12,7 +12,7 @@ data_dir: "data/train_data"
 # Parameters for model
 # clip model
 input_dim: 768
-num_frames: 40
+num_frames: 56
 textencoder: "openai/clip-vit-large-patch14"  # "openai/clip-vit-base-patch32", "openai/clip-vit-base-patch16", "openai/clip-vit-large-patch14", "openai/clip-vit-large-patch14-336",
 textencoder_freeze: True
 textencoder_projection: False
