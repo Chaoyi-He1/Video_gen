@@ -32,7 +32,7 @@ if __name__ == "__main__":
     for i, batch in tqdm(enumerate(loader)):
         if i >= 8000:
             break
-        mp4 = batch["mp4"][0].to(torch.uint8).numpy()
+        mp4 = batch["mp4"][0].to(torch.uint8).contiguous().numpy()   # mps is a numpy with shape (1, config["max_num_frames"], 3, config["video_height"], config["video_width"])
         video_name = batch["video_name"][0]
         if len(mp4) > 0:
             if not os.path.exists(os.path.join(save_dir, f"{video_name}.npz")) or overwrite:
