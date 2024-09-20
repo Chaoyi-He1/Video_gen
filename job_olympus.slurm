@@ -2,7 +2,7 @@
 
 ##NECESSARY JOB SPECIFICATIONS
 #SBATCH --job-name=Video_gen         #Set the job name to "JobExample4"
-#SBATCH --time=04:00:00              #Set the wall clock limit to 1hr and 30min
+#SBATCH --time=36:00:00              #Set the wall clock limit to 1hr and 30min
 #SBATCH --nodes=1
 #SBATCH --ntasks=1                   #Request 1 task (CPU)
 #SBATCH --cpus-per-task=8            #Request exactly (or max) of 28 tasks per node     
@@ -21,6 +21,6 @@
 
 cd /mnt/shared-scratch/Katehi_L/chaoyi_he/Video_gen/
 source /mnt/shared-scratch/Katehi_L/chaoyi_he/Conda_env/bin/activate
-conda active 3_9_env
+conda activate 3_9_env
 
 torchrun --nproc_per_node=2 main.py
