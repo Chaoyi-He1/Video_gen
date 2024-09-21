@@ -103,6 +103,8 @@ def main(args):
         assert torch.backends.cudnn.version() >= 7603, "Amp requires cudnn >= 7603"
     
     device = torch.device(args.device)
+    # print the gpu model name to check if it is A100
+    print(torch.cuda.get_device_name())
     
     # load hyper parameters
     with open(args.config) as f:
