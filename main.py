@@ -69,10 +69,10 @@ def parse_args():
                         help='initial learning rate')
     parser.add_argument('--lrf', default=0.1, type=float,
                         help='learning rate factor')
-    parser.add_argument('--clip_max_norm', default=0.1, type=float,
+    parser.add_argument('--clip_max_norm', default=0.01, type=float,
                         help='gradient clipping max norm')
     
-    # distributed training parameters
+    # distributed training parameter
     parser.add_argument('--world_size', default=1, type=int,
                         help='number of distributed processes')
     parser.add_argument('--dist_url', default='env://', type=str,
