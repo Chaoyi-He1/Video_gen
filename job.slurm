@@ -2,7 +2,7 @@
 
 ##NECESSARY JOB SPECIFICATIONS
 #SBATCH --job-name=Video_gen         #Set the job name to "JobExample4"
-#SBATCH --time=24:00:00              #Set the wall clock limit to 1hr and 30min
+#SBATCH --time=48:00:00              #Set the wall clock limit to 1hr and 30min
 #SBATCH --ntasks=8                   #Request 1 task (CPU)
 #SBATCH --ntasks-per-node=8          #Request exactly (or max) of 28 tasks per node
 #SBATCH --mem=64G                    #Request 64GB per node
