@@ -52,8 +52,9 @@ def train_one_epoch(
                 if loss.isnan():
                     print("NaN loss")
                     optimizer.zero_grad()
-                    # clear cache
+                    # clear cache and gradients in the model
                     torch.cuda.empty_cache()
+                    model.zero_grad()
                     continue
                 
                 optimizer.zero_grad()
