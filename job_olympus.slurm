@@ -14,8 +14,8 @@
 
 ##OPTIONAL JOB SPECIFICATIONS
 ##SBATCH --account=122768702865            #Set billing account to Terra:122768702865	Grace:132768702708
-##SBATCH --mail-type=ALL              	   #Send email on all job events
-##SBATCH --mail-user=chaoyi_he@tamu.edu    #Send all emails to email_address 
+#SBATCH --mail-type=FAIL              	   #Send email on all job events
+#SBATCH --mail-user=chaoyi_he@tamu.edu    #Send all emails to email_address 
 
 #First Executable Line
 
