@@ -41,6 +41,9 @@ def train_one_epoch(
         
         # Loop over smaller mini-batches (chunks)
         for i in range(0, b*f, mini_frames):
+            # clear cache and gradients in the model
+            torch.cuda.empty_cache()
+            model.zero_grad()
             with torch.amp.autocast('cuda', enabled=scaler is not None):
                 # Move the forward pass inside the loop
                 ssm_out, video = model(videos, **captions)
