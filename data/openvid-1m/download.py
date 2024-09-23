@@ -16,7 +16,7 @@ def post_process_video(video_names, video_folder):
             continue
 
 
-def video_filter(data_path, min_frames=100):
+def video_filter(data_path, min_frames=100, random_sample = 8000):
     df = pd.read_csv(data_path)
     df["frame"] = pd.to_numeric(df["frame"], errors="coerce")
     df.dropna(inplace=True)
@@ -29,8 +29,9 @@ def video_filter(data_path, min_frames=100):
             return False
 
     filtered_df = df[df.apply(filter_row, axis=1)]
-    filtered_df.to_csv(data_path, index=False)
-    return filtered_df
+    sampled_df = filtered_df.sample(n=random_sample, random_state=42)
+    sampled_df.to_csv(data_path, index=False)
+    return sampled_df
 
 
 ### download openvid_files
