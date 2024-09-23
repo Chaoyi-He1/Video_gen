@@ -21,6 +21,10 @@ def train_one_epoch(
     header = 'Epoch: [{}]'.format(epoch)
     
     for batch in metric_logger.log_every(data_loader, print_freq, header):
+        # clear cache and gradients in the model
+        torch.cuda.empty_cache()
+        model.zero_grad()
+        
         videos = batch["mp4"].to(device)
         captions = tokenizer.tokenize(batch["txt"]).to(device)
         
