@@ -55,8 +55,8 @@ def download_files(
         "https://huggingface.co/datasets/nkp37/OpenVid-1M/resolve/main/data/train/OpenVidHD.csv"
     data_path = os.path.join(data_folder, os.path.basename(data_url))
     # if not os.path.exists(data_path):
-    # command = ["wget", "-O", data_path, data_url]
-    # subprocess.run(command, check=True)
+    command = ["wget", "-O", data_path, data_url]
+    subprocess.run(command, check=True)
     # else:
     #     print(f"{data_path} already exists. Skipping download.")
 
