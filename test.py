@@ -21,8 +21,8 @@ if __name__ == "__main__":
     dataset, _ = create_data_loader(
         data_dir=config["data_dir"],
         video_size=(config["video_height"], config["video_width"]),
-        fps=8,
-        max_num_frames=56,
+        fps=16,
+        max_num_frames=250,
     )
     sampler = torch.utils.data.RandomSampler(dataset)
     loader = torch.utils.data.DataLoader(
@@ -36,7 +36,7 @@ if __name__ == "__main__":
         mp4 = batch["mp4"][0]   
         mp4 = mp4.permute(0, 2, 3, 1).contiguous().to(torch.uint8).numpy()# mps is a numpy with shape (1, config["max_num_frames"], 3, config["video_height"], config["video_width"])
         # transfer it to video and save it
-        # mp4 = mp4[:112:2, :, :, :]
+        mp4 = mp4[:112:2, :, :, :]
         print(mp4.shape)
         video = [cv2.cvtColor(frame, cv2.COLOR_RGB2BGR) for frame in mp4]
         video_path = "sample/sample_video_{}.mp4".format(i)
