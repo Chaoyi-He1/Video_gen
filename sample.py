@@ -95,7 +95,7 @@ def main(args):
     Path(args.save_dir).mkdir(parents=True, exist_ok=True)
     
     # create model
-    model = SSM_video_gen(config, is_train=True).to(device)
+    model = SSM_video_gen(config, is_train=True)
     tokenizer = CLIPTextTokenizer(model_dir=config["textencoder"])
     vae = AutoencoderKL.from_pretrained(f"stabilityai/sd-vae-ft-{args.vae}").to(device)
     
@@ -119,6 +119,8 @@ def main(args):
         assert torch.equal(p_model, p_checkpoint), "Model not loaded correctly"
     print("Model loaded correctly")
     del checkpoint
+    
+    model.to(device)
     
     # read text captions from a list of .txt files
     test_list = [os.path.join(args.test_dir, f) for f in os.listdir(args.test_dir) if f.endswith('.txt')]
