@@ -133,5 +133,6 @@ def main(args):
     sampling(
         model=model, tokenizer=tokenizer, 
         data_loader=captions, device=device,
-        scaler=scaler, print_freq=1, vae=vae, fps=config["fps"]
+        scaler=scaler, print_freq=1, vae=vae, fps=config["fps"],
+        output_dir=args.save_dir,
     )
