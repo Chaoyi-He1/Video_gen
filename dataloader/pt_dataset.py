@@ -1,6 +1,7 @@
 import torch
 import os
 import numpy as np
+from torchvision import transforms
 
 
 class PTDataset(torch.utils.data.Dataset):
@@ -15,6 +16,7 @@ class PTDataset(torch.utils.data.Dataset):
             if f.endswith(".npz")
         ]
         self.captions = self._load_captions(self.file_paths)
+        self.normalize = transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
 
     def _load_captions(self, file_paths):
         captions = []
@@ -38,7 +40,9 @@ class PTDataset(torch.utils.data.Dataset):
     def __getitem__(self, idx):
         # mp4 = torch.load(self.file_paths[idx])
         mp4 = np.load(self.file_paths[idx])["array"]
-        mp4 = (torch.from_numpy(mp4) - 127.5) / 127.5
+        mp4 = torch.from_numpy(mp4)
+        # normalize the video frames
+        mp4 = self.normalize(mp4)
         # refill the nan values with 0
         # if torch.isnan(mp4).any():
         #     print(f"Found NaN values in {self.file_paths[idx]}")
