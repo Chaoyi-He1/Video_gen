@@ -31,6 +31,8 @@ def sampling(
         for j in range(b):
             # Save the video in the batch
             video = samples[j].permute(0, 2, 3, 1).cpu().numpy()
+            print(video.shape)
+            print(video)
             # video = (video * 255).astype('uint8')
             video = [cv2.cvtColor(frame, cv2.COLOR_RGB2BGR) for frame in video]
             video_path = f"{output_dir}/sample_{i}_{j}.mp4"
