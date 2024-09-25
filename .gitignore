@@ -13,4 +13,3 @@ test.py
 *.err
 data/train_npy/*
 data/train_data/videos_npy
-sample/*
