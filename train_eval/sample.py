@@ -14,20 +14,19 @@ def sampling(
     fps: float = 8,
 ):
     model.eval()
-    metric_logger = MetricLogger(delimiter="; ")
-    header = 'Sampling:'
     assert vae is not None, "VAE model is required for sampling"
     
-    for i, sample in enumerate(metric_logger.log_every(data_loader, print_freq, header=header)):
-        captions = tokenizer.tokenize(sample["txt"]).to(device)
+    for i, sample in enumerate(data_loader):
+        captions = tokenizer.tokenize(sample).to(device)
         b = captions["input_ids"].shape[0]
         
-        with torch.no_grad(), torch.cuda.amp.autocast(enabled=scaler is not None):
-           samples = model(None, **captions)
-           samples = vae.decode(samples / 0.18215).sample
-           bf, c, h, w = samples.shape
-           f = bf // b
-           samples = samples.view(b, f, c, h, w)
+        with torch.cuda.amp.autocast(enabled=scaler is not None):
+            with torch.no_grad():
+                samples = model(None, **captions)
+                samples = vae.decode(samples / 0.18215).sample
+                bf, c, h, w = samples.shape
+                f = bf // b
+                samples = samples.view(b, f, c, h, w)
         
         for j in range(b):
             # Save the video in the batch
