@@ -24,6 +24,10 @@ def sampling(
             with torch.no_grad():
                 samples = model(None, **captions)
                 samples = vae.decode(samples / 0.18215).sample
+                # check if nan exists
+                if torch.isnan(samples).any():
+                    print("NaN samples")
+                    continue
                 bf, c, h, w = samples.shape
                 f = bf // b
                 samples = samples.view(b, f, c, h, w)
