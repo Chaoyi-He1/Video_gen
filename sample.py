@@ -136,3 +136,7 @@ def main(args):
         scaler=scaler, print_freq=1, vae=vae, fps=config["fps"],
         output_dir=args.save_dir,
     )
+    
+if __name__ == '__main__':
+    args = parse_args()
+    main(args)
