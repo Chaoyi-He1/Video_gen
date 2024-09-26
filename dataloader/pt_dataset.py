@@ -40,7 +40,7 @@ class PTDataset(torch.utils.data.Dataset):
     def __getitem__(self, idx):
         # mp4 = torch.load(self.file_paths[idx])
         mp4 = np.load(self.file_paths[idx])["array"]
-        mp4 = torch.from_numpy(mp4).to(torch.float)
+        mp4 = torch.from_numpy(mp4).to(torch.float) / 255
         # normalize the video frames
         mp4 = self.normalize(mp4)
         # refill the nan values with 0
