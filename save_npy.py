@@ -31,7 +31,7 @@ if __name__ == "__main__":
         drop_last=False)
     os.makedirs(save_dir, exist_ok=True)
     
-    for i, batch in tqdm(enumerate(loader)):
+    for batch in tqdm(loader):
         mp4 = batch["mp4"][0].to(torch.uint8).contiguous().numpy()   # mps is a numpy with shape (1, config["max_num_frames"], 3, config["video_height"], config["video_width"])
         # mp4 = mp4[:config["max_num_frames"]*2:2, :, :, :]
         video_name = batch["video_name"][0]
