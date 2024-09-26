@@ -120,7 +120,7 @@ class SFTDataset(Dataset):
 
         step = max((end - start) // num_frames, 1)
         indices = np.arange(start, end, step).astype(int)
-        indices = torch.clamp(torch.tensor(indices - start), 0, num_frames - 1)
+        indices = torch.clamp(torch.tensor(indices), start, end)
         return indices
 
     @classmethod

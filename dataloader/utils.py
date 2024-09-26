@@ -2,6 +2,7 @@ import torch
 import torchvision.transforms as TT
 from torchvision.transforms.functional import resize
 from torchvision.transforms import InterpolationMode
+import numpy as np
 
 
 def resize_for_rectangle_crop(arr, image_size, reshape_mode="random"):
