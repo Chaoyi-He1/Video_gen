@@ -103,23 +103,24 @@ class SFTDataset(Dataset):
 
         start = self.skip_frms_num
         end = ori_vlen - self.skip_frms_num
+        max_fps_ratio = int(actual_fps / self.fps) + 1
 
         if desired_num_frames < self.max_num_frames:
             # Video has fewer frames than max_num_frames after adjusting fps
-            indices = self._generate_indices(start, end, desired_num_frames)
+            indices = self._generate_indices(start, end, desired_num_frames, max_fps_ratio)
         else:
             # Video has more frames; sample max_num_frames
-            indices = self._generate_indices(start, end, self.max_num_frames)
+            indices = self._generate_indices(start, end, self.max_num_frames, max_fps_ratio)
 
         temp_frms = vr.get_batch(indices.numpy())
         tensor_frms = temp_frms if isinstance(temp_frms, torch.Tensor) else torch.from_numpy(temp_frms)
 
         return tensor_frms
 
-    def _generate_indices(self, start, end, num_frames):
+    def _generate_indices(self, start, end, num_frames, max_fps_ratio=1):
 
-        step = max((end - start) // num_frames, 1)
-        indices = np.arange(start, end, step).astype(int)
+        step = min(max((end - start) // num_frames, 1), max_fps_ratio)
+        indices = np.arange(start, end, step).astype(int)[:num_frames]
         indices = torch.clamp(torch.tensor(indices), start, end)
         return indices
 
