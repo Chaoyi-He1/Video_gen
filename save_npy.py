@@ -26,7 +26,8 @@ if __name__ == "__main__":
     sampler = torch.utils.data.SequentialSampler(dataset)
     loader = torch.utils.data.DataLoader(
         dataset, batch_size=1,
-        sampler=sampler, num_workers=8,
+        sampler=sampler, 
+        # num_workers=8,
         drop_last=False)
     os.makedirs(save_dir, exist_ok=True)
     
