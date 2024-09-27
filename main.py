@@ -129,7 +129,7 @@ def main(args):
     # load checkpoint
     if args.resume.endswith('.pth'):
         print(f"Loading checkpoint: {args.resume}")
-        checkpoint = torch.load(args.resume, map_location='cpu')
+        checkpoint = torch.load(args.resume, map_location='cpu', weights_only=False)
         
         try:
             model.load_state_dict(checkpoint['model'], strict=True)
