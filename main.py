@@ -40,7 +40,7 @@ def parse_args():
                         nargs=argparse.REMAINDER)
     
     # output directory
-    parser.add_argument('--resume', default='trained_models/model_13.pth', type=str, metavar='PATH',
+    parser.add_argument('--resume', default='trained_models/model_50.pth', type=str, metavar='PATH',
                         help='path to latest checkpoint (default none)')
     parser.add_argument('--save_dir', default='trained_models/', type=str,
                         help='directory to save checkpoints')
@@ -69,7 +69,7 @@ def parse_args():
                         help='initial learning rate')
     parser.add_argument('--lrf', default=0.1, type=float,
                         help='learning rate factor')
-    parser.add_argument('--clip_max_norm', default=0.01, type=float,
+    parser.add_argument('--clip_max_norm', default=0.1, type=float,
                         help='gradient clipping max norm')
     
     # distributed training parameter
