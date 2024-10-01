@@ -40,7 +40,7 @@ def train_one_epoch(
                 videos = videos.view(b, f, c+1, h//8, w//8)
         
         # Loop over smaller mini-batches (chunks)
-        for i in range(0, b*f, mini_frames):
+        for i in range(b):
             # clear cache and gradients in the model
             torch.cuda.empty_cache()
             model.zero_grad()
@@ -52,8 +52,8 @@ def train_one_epoch(
                 t = torch.randint(0, model.module.diffusion.num_timesteps, (mini_frames,), device=video.device)
 
                 # Compute the loss
-                model_kwargs = dict(y=ssm_out[i: i + mini_frames])
-                loss_dict = model.module.diffusion.training_losses(model.module.dit, video[i: i + mini_frames], t, model_kwargs)
+                model_kwargs = dict(y=ssm_out[i, ...])
+                loss_dict = model.module.diffusion.training_losses(model.module.dit, video[i, ...], t, model_kwargs)
                 loss = loss_dict["loss"].mean()
                 
                 if loss.isnan():

@@ -99,7 +99,7 @@ def main(args):
     tokenizer = CLIPTextTokenizer(model_dir=config["textencoder"])
     vae = AutoencoderKL.from_pretrained(f"stabilityai/sd-vae-ft-{args.vae}").to(device)
     
-    scaler = scaler = torch.amp.GradScaler('cuda', enabled=args.amp) if args.amp else None
+    scaler = torch.amp.GradScaler('cuda', enabled=args.amp) if args.amp else None
     
     # load checkpoint
     assert args.resume.endswith('.pth'), "Only .pth files are supported"

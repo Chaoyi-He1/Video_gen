@@ -20,7 +20,7 @@ def sampling(
         captions = tokenizer.tokenize(sample).to(device)
         b = captions["input_ids"].shape[0]
         
-        with torch.cuda.amp.autocast(enabled=scaler is not None):
+        with torch.amp.autocast('cuda', enabled=scaler is not None):
             with torch.no_grad():
                 samples = model(None, **captions)
                 if torch.isnan(samples).any():
