@@ -1,1 +1,1 @@
-from .whole_model import SSM_video_gen
+from .whole_model import create_model

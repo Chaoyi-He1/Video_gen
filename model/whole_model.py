@@ -6,9 +6,9 @@ import torch
 from diffusion import create_diffusion
 
 
-class SSM_video_gen(nn.Module):
+class SSM_block(nn.Module):
     def __init__(self, config: dict, is_train: bool=True) -> None:
-        super(SSM_video_gen, self).__init__()
+        super(SSM_block, self).__init__()
         self.clip_config = {
             "input_dim": config["input_dim"],
             "num_frames": config["num_frames"],
@@ -30,38 +30,21 @@ class SSM_video_gen(nn.Module):
             "d_state": config["mamba_d_state"],
         }
         
-        self.dit_config = {
-            "input_size": config["dit_input_size"],
-            "in_channels": config["dit_in_channels"],
-            "learn_sigma": config["dit_learn_sigma"],
-            "latent_size": config["input_dim"],
-        }
-        
-        self.dit_name = config["dit_name"]
-        
         self.textencoder = SSM_input_projection(self.clip_config)
         
         if self.textencoder.textencoder.config.hidden_size != config["input_dim"]:
             self.mamba_config["cin"] = self.textencoder.textencoder.config.hidden_size
             self.mamba_config["cout"] = self.textencoder.textencoder.config.hidden_size
             self.mamba_config["d_model"] = self.textencoder.textencoder.config.hidden_size
-            self.dit_config["latent_size"] = self.textencoder.textencoder.config.hidden_size
+            
             print("Warning: input_dim is not equal to the hidden_size of the text encoder. \
                    input_dim={} is updated to hidden_size of the text encoder: {}.".format(
                        config["input_dim"], 
                        self.textencoder.textencoder.config.hidden_size))
         
         self.mamba = BiMamba2_1D(**self.mamba_config)
-        self.dit = DiT_models[self.dit_name](**self.dit_config)
-        
-        self.diffusion = create_diffusion(timestep_respacing="") if is_train else \
-            create_diffusion(str(config["num_sampling_steps"]))
-            # default: 1000 steps, linear noise schedule for training, MSE loss
-        self.is_train = is_train
     
-    def forward_training(self, video: torch.Tensor, **Token_text):
-        b, f, c, h, w = video.shape 
-        
+    def forward(self, **Token_text):
         TextEncoderOutput = self.textencoder(**Token_text)
         
         ssm_in = TextEncoderOutput.permute(0, 2, 1).contiguous() # (batch, dim, num_frames)
@@ -70,25 +53,7 @@ class SSM_video_gen(nn.Module):
         
         # combine ssm_out first two dimensions, as well as video first two dimensions
         ssm_out = ssm_out
-        video = video
-        
-        # # Separate b*f samples into mini-batch of size 20
-        # loss_dict = {}
-        # for i in range(0, b*f, 5):
-        #     t = torch.randint(0, self.diffusion.num_timesteps, (5,), device=video.device)
-        #     model_kwargs = dict(y=ssm_out[i:i+5])
-        #     loss_dict_ = self.diffusion.training_losses(self.dit, video[i:i+5], t, model_kwargs)
-        #     for key, value in loss_dict_.items():
-        #         if key not in loss_dict:
-        #             loss_dict[key] = value
-        #         else:
-        #             loss_dict[key] += value
-        # for key in loss_dict:
-        #     loss_dict[key] /= (b*f // 5)
-        # t = torch.randint(0, self.diffusion.num_timesteps, (video.shape[0],), device=video.device)
-        # model_kwargs = dict(y=ssm_out)
-        # loss_dict = self.diffusion.training_losses(self.dit, video, t, model_kwargs)
-        return ssm_out, video
+        return ssm_out
     
     def forward_generation(self, **Token_text):
         TextEncoderOutput = self.textencoder(**Token_text)
@@ -117,10 +82,29 @@ class SSM_video_gen(nn.Module):
         )
         samples, _ = samples.chunk(2, dim=0)  # Remove null class samples
         return samples
+
+
+def create_model(config: dict, is_train: bool=True):
+    ssm_block = SSM_block(config, is_train)
     
-    def forward(self, video: torch.Tensor=None, **Token_text):
-        if self.training and video is not None:
-            return self.forward_training(video, **Token_text)
-        else:
-            return self.forward_generation(**Token_text)
-        
+    dit_config = {
+        "input_size": config["dit_input_size"],
+        "in_channels": config["dit_in_channels"],
+        "learn_sigma": config["dit_learn_sigma"],
+        "latent_size": config["input_dim"],
+    }
+    
+    dit_name = config["dit_name"]
+    
+    if ssm_block.textencoder.textencoder.config.hidden_size != config["input_dim"]:
+        dit_config["latent_size"] = ssm_block.textencoder.textencoder.config.hidden_size
+        print("Warning: input_dim is not equal to the hidden_size of the text encoder. \
+               input_dim={} is updated to hidden_size of the text encoder: {}.".format(
+                   config["input_dim"], 
+                   ssm_block.textencoder.textencoder.config.hidden_size))
+    
+    dit_block = DiT_models[dit_name](**dit_config)
+    diffusion = create_diffusion(timestep_respacing="") if is_train else \
+        create_diffusion(str(config["num_sampling_steps"]))
+    
+    return ssm_block, dit_block, diffusion

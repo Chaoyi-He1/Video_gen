@@ -5,34 +5,58 @@ from typing import Iterable
 from dataloader.text_tokenizer import CLIPTextTokenizer
 from diffusers.models import AutoencoderKL
 import cv2
+from diffusion.respace import SpacedDiffusion
 
 
 def sampling(
-    model: torch.nn.Module, tokenizer: CLIPTextTokenizer,
+    ssm_model: torch.nn.Module, tokenizer: CLIPTextTokenizer,
+    diffusion: SpacedDiffusion, DiT_model: torch.nn.Module,
     data_loader: Iterable, device: torch.device, 
     scaler=None, print_freq: int = 1, vae: AutoencoderKL = None,
     fps: float = 8, output_dir: str = "sample/",
 ):
-    model.eval()
+    ssm_model.eval()
+    DiT_model.eval()
     assert vae is not None, "VAE model is required for sampling"
     
     for i, sample in enumerate(data_loader):
         captions = tokenizer.tokenize(sample).to(device)
-        b = captions["input_ids"].shape[0]
         
         with torch.amp.autocast('cuda', enabled=scaler is not None):
             with torch.no_grad():
-                samples = model(None, **captions)
+                ssm_out = ssm_model(**captions)
+                b, f, _ = ssm_out.shape
+                ssm_out = ssm_out.view(b*f, -1)
+                
+                z = torch.randn(b*f, 4, DiT_model.input_size, DiT_model.input_size, device=ssm_out.device)
+                # Setup classifier-free guidance:
+                z = torch.cat([z, z], 0)
+                
+                # repeat self.dit.y_embedder.cfg_embedding b*f times and concatenate with ssm_out
+                y_null = DiT_model.y_embedder.cfg_embedding.repeat(b*f, 1)
+                y = torch.cat([ssm_out, y_null], 0)
+                model_kwargs = dict(y=y, cfg_scale=4.0)
+                
+                # Sample images:
+                samples = diffusion.p_sample_loop(
+                    DiT_model.forward_with_cfg, z.shape, z, clip_denoised=False, 
+                    model_kwargs=model_kwargs, progress=True, device=z.device
+                )
+                samples, _ = samples.chunk(2, dim=0)  # Remove null class samples
+        
                 if torch.isnan(samples).any():
                     print("NaN samples")
                     continue
+                
                 samples = vae.decode(samples / 0.18215).sample
+                print("samples range: ", samples.min(), samples.max())
+                
                 # check if nan exists
                 if torch.isnan(samples).any():
                     print("NaN samples")
                     continue
                 bf, c, h, w = samples.shape
-                f = bf // b
+                assert f == bf // b, "Batch size mismatch"
                 samples = samples.view(b, f, c, h, w)
         
         for j in range(b):

@@ -21,7 +21,7 @@ import torch.multiprocessing
 
 import utils.misc as utils
 from dataloader import create_data_loader, CLIPTextTokenizer, PTDataset
-from model import SSM_video_gen
+from model import create_model
 from train_eval import *
 from diffusers.models import AutoencoderKL
 
@@ -119,7 +119,7 @@ def main(args):
         writer = SummaryWriter()
     
     # create model
-    model = SSM_video_gen(config, is_train=True).to(device)
+    ssm_model, dit_model, diffusion = create_model(config, is_train=True)
     tokenizer = CLIPTextTokenizer(model_dir=config["textencoder"])
     vae = AutoencoderKL.from_pretrained(f"stabilityai/sd-vae-ft-{args.vae}").to(device)
     
@@ -132,32 +132,51 @@ def main(args):
         checkpoint = torch.load(args.resume, map_location='cpu', weights_only=False)
         
         try:
-            model.load_state_dict(checkpoint['model'], strict=True)
+            ssm_model.load_state_dict(checkpoint['ssm_model'], strict=True)
+            dit_model.load_state_dict(checkpoint['dit_model'], strict=True)
         except KeyError as e:
             s = "%s is not compatible with %s. Specify --resume=.../model.pth" % (args.resume, args.config)
             raise KeyError(s) from e
+        
+        for p_model, p_checkpoint in zip(ssm_model.parameters(), checkpoint['ssm_model'].values()):
+            assert torch.equal(p_model, p_checkpoint), "Model and checkpoint parameters are not equal"
+        print("SSM model loaded correctly")
+        for p_model, p_checkpoint in zip(dit_model.parameters(), checkpoint['dit_model'].values()):
+            assert torch.equal(p_model, p_checkpoint), "Model and checkpoint parameters are not equal"
+        print("DiT model loaded correctly")
         
         start_epoch = checkpoint['epoch'] + 1
         scaler.load_state_dict(checkpoint['scaler'])
         del checkpoint
         print(f"Loaded checkpoint: {args.resume}")
     
+    ssm_model.to(device)
+    dit_model.to(device)
+    
     # freeze text encoder if needed
     if config["textencoder_freeze"]:
-        for n, p in model.textencoder.named_parameters():
+        for n, p in ssm_model.textencoder.named_parameters():
             if "textencoder" in n:
                 if p.requires_grad:
                     print(f"Freezing {n}, from {p.requires_grad} to False")
                 p.requires_grad = False
                 
     # move to distributed mode
-    model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.gpu])
+    ssm_model = torch.nn.parallel.DistributedDataParallel(ssm_model, device_ids=[args.gpu])
+    dit_model = torch.nn.parallel.DistributedDataParallel(dit_model, device_ids=[args.gpu])
     vae = torch.nn.parallel.DistributedDataParallel(vae, device_ids=[args.gpu])
-    model_without_ddp = model.module
+    ssm_model_without_ddp = ssm_model.module
+    dit_model_without_ddp = dit_model.module
     
     # create optimizer and scheduler and model info
     p_to_optimize, n_p, n_p_o, layers = [], 0, 0, 0
-    for p in model.module.parameters():
+    for p in ssm_model.module.parameters():
+        n_p += p.numel()
+        if p.requires_grad:
+            p_to_optimize.append(p)
+            n_p_o += p.numel()
+            layers += 1
+    for p in dit_model.module.parameters():
         n_p += p.numel()
         if p.requires_grad:
             p_to_optimize.append(p)
@@ -199,8 +218,10 @@ def main(args):
     for epoch in range(start_epoch, args.epochs):
         sampler.set_epoch(epoch)
         loss_dict = train_one_epoch(
-            model=model, tokenizer=tokenizer, data_loader=dataloader,
-            optimizer=optimizer, device=device, epoch=epoch, max_norm=args.clip_max_norm,
+            ssm_model=ssm_model, tokenizer=tokenizer, 
+            diffusion=diffusion, DiT_model=dit_model,
+            data_loader=dataloader, optimizer=optimizer, 
+            device=device, epoch=epoch, max_norm=args.clip_max_norm,
             scaler=scaler, print_freq=args.print_freq, vae=vae,
             mini_frames=config["mini_frames"],
         )
@@ -214,7 +235,8 @@ def main(args):
         if args.rank in [-1, 0]:
             if (epoch % args.save_freq == 0) or (epoch == args.epochs - 1):
                 utils.save_on_master({
-                    'model': model_without_ddp.state_dict(),
+                    'ssm_model': ssm_model_without_ddp.state_dict(),
+                    'dit_model': dit_model_without_ddp.state_dict(),
                     'scaler': scaler.state_dict(),
                     'optimizer': optimizer.state_dict(),
                     'scheduler': scheduler.state_dict(),

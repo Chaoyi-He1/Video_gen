@@ -21,7 +21,7 @@ import torch.multiprocessing
 
 import utils.misc as utils
 from dataloader import create_data_loader, CLIPTextTokenizer, PTDataset
-from model import SSM_video_gen
+from model import create_model
 from train_eval import *
 from diffusers.models import AutoencoderKL
 
@@ -95,7 +95,7 @@ def main(args):
     Path(args.save_dir).mkdir(parents=True, exist_ok=True)
     
     # create model
-    model = SSM_video_gen(config, is_train=True)
+    ssm_model, dit_model, diffusion = create_model(config, is_train=True)
     tokenizer = CLIPTextTokenizer(model_dir=config["textencoder"])
     vae = AutoencoderKL.from_pretrained(f"stabilityai/sd-vae-ft-{args.vae}").to(device)
     
@@ -107,20 +107,25 @@ def main(args):
     checkpoint = torch.load(args.resume, map_location='cpu', weights_only=False)
     
     try:
-        model.load_state_dict(checkpoint['model'], strict=True)
+        ssm_model.load_state_dict(checkpoint['ssm_model'], strict=True)
+        dit_model.load_state_dict(checkpoint['dit_model'], strict=True)
     except KeyError as e:
         s = "%s is not compatible with %s. Specify --resume=.../model.pth" % (args.resume, args.config)
         raise KeyError(s) from e
     
-    scaler.load_state_dict(checkpoint['scaler'])
+    for p_model, p_checkpoint in zip(ssm_model.parameters(), checkpoint['ssm_model'].values()):
+            assert torch.equal(p_model, p_checkpoint), "Model and checkpoint parameters are not equal"
+    print("SSM model loaded correctly")
+    for p_model, p_checkpoint in zip(dit_model.parameters(), checkpoint['dit_model'].values()):
+        assert torch.equal(p_model, p_checkpoint), "Model and checkpoint parameters are not equal"
+    print("DiT model loaded correctly")
     
-    # Check if the model is loaded correctly
-    for p_model, p_checkpoint in zip(model.parameters(), checkpoint['model'].values()):
-        assert torch.equal(p_model, p_checkpoint), "Model not loaded correctly"
-    print("Model loaded correctly")
+    scaler.load_state_dict(checkpoint['scaler'])
+
     del checkpoint
     
-    model.to(device)
+    ssm_model.to(device)
+    dit_model.to(device)
     
     # read text captions from a list of .txt files
     test_list = [os.path.join(args.test_dir, f) for f in os.listdir(args.test_dir) if f.endswith('.txt')]

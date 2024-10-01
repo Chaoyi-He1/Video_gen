@@ -5,25 +5,29 @@ from typing import Iterable
 from dataloader.text_tokenizer import CLIPTextTokenizer
 from diffusers.models import AutoencoderKL
 import torch.amp
+from diffusion.respace import SpacedDiffusion
 
 
 def train_one_epoch(
-    model: torch.nn.Module, tokenizer: CLIPTextTokenizer,
+    ssm_model: torch.nn.Module, tokenizer: CLIPTextTokenizer,
+    diffusion: SpacedDiffusion, DiT_model: torch.nn.Module,
     data_loader: Iterable, optimizer: torch.optim.Optimizer,
     device: torch.device, epoch: int, max_norm: float = 0.1,
     scaler=None, print_freq: int = 100, vae: AutoencoderKL = None,
     mini_frames: int = 40,
 ):
-    model.train()
+    ssm_model.train()
+    DiT_model.train()
     metric_logger = MetricLogger(delimiter="; ")
     metric_logger.add_meter('lr', SmoothedValue(window_size=1, fmt='{value:.6f}'))
     metric_logger.add_meter('loss', SmoothedValue(window_size=10, fmt='{value:.6f}'))
     header = 'Epoch: [{}]'.format(epoch)
     
     for batch in metric_logger.log_every(data_loader, print_freq, header):
-        # clear cache and gradients in the model
-        torch.cuda.empty_cache()
-        model.zero_grad()
+        # # clear cache and gradients in the model
+        # torch.cuda.empty_cache()
+        # ssm_model.zero_grad()
+        # DiT_model.zero_grad()
         
         videos = batch["mp4"].to(device)
         captions = tokenizer.tokenize(batch["txt"]).to(device)
@@ -41,19 +45,16 @@ def train_one_epoch(
         
         # Loop over smaller mini-batches (chunks)
         for i in range(b):
-            # clear cache and gradients in the model
-            torch.cuda.empty_cache()
-            model.zero_grad()
             with torch.amp.autocast('cuda', enabled=scaler is not None):
                 # Move the forward pass inside the loop
-                ssm_out, video = model(videos, **captions)
+                ssm_out = ssm_model(**captions)
                 
                 # Get a random timestep
-                t = torch.randint(0, model.module.diffusion.num_timesteps, (f,), device=video.device)
+                t = torch.randint(0, diffusion.num_timesteps, (f,), device=videos.device)
 
                 # Compute the loss
                 model_kwargs = dict(y=ssm_out[i, ...])
-                loss_dict = model.module.diffusion.training_losses(model.module.dit, video[i, ...], t, model_kwargs)
+                loss_dict = diffusion.training_losses(DiT_model, videos[i, ...], t, model_kwargs)
                 loss = loss_dict["loss"].mean()
                 
                 if loss.isnan():
@@ -61,7 +62,8 @@ def train_one_epoch(
                     optimizer.zero_grad()
                     # clear cache and gradients in the model
                     torch.cuda.empty_cache()
-                    model.zero_grad()
+                    ssm_model.zero_grad()
+                    DiT_model.zero_grad()
                     continue
                 
                 optimizer.zero_grad()
@@ -75,7 +77,9 @@ def train_one_epoch(
                 if max_norm > 0:
                     if scaler is not None:
                         scaler.unscale_(optimizer)
-                    torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm)
+                    # Gradient clipping for ssm_model and DiT_model
+                    torch.nn.utils.clip_grad_norm_(ssm_model.parameters(), max_norm)
+                    torch.nn.utils.clip_grad_norm_(DiT_model.parameters(), max_norm)
                 
                 # Optimizer step
                 if scaler is not None:
