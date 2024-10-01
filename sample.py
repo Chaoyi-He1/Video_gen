@@ -138,7 +138,8 @@ def main(args):
     
     # generate videos
     sampling(
-        model=model, tokenizer=tokenizer, 
+        ssm_model=ssm_model, tokenizer=tokenizer, 
+        diffusion=diffusion, DiT_model=dit_model,
         data_loader=captions, device=device,
         scaler=scaler, print_freq=1, vae=vae, fps=config["fps"],
         output_dir=args.save_dir,

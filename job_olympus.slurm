@@ -14,6 +14,7 @@
 
 ##OPTIONAL JOB SPECIFICATIONS
 ##SBATCH --account=122768702865            #Set billing account to Terra:122768702865	Grace:132768702708
+## --master_port=42247
 #SBATCH --mail-type=FAIL              	   #Send email on all job events
 #SBATCH --mail-user=chaoyi_he@tamu.edu    #Send all emails to email_address 
 
@@ -23,4 +24,4 @@ cd /mnt/shared-scratch/Katehi_L/chaoyi_he/Video_gen/
 source /mnt/shared-scratch/Katehi_L/chaoyi_he/conda/miniconda/bin/activate
 conda activate 3_9_env
 
-torchrun --nproc_per_node=2 --master_port=42247 main.py
+torchrun --nproc_per_node=2 main.py
