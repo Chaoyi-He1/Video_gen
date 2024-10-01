@@ -49,7 +49,7 @@ def train_one_epoch(
                 ssm_out, video = model(videos, **captions)
                 
                 # Get a random timestep
-                t = torch.randint(0, model.module.diffusion.num_timesteps, (mini_frames,), device=video.device)
+                t = torch.randint(0, model.module.diffusion.num_timesteps, (f,), device=video.device)
 
                 # Compute the loss
                 model_kwargs = dict(y=ssm_out[i, ...])
