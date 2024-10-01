@@ -49,6 +49,11 @@ def train_one_epoch(
                 # Move the forward pass inside the loop
                 ssm_out = ssm_model(**captions)
                 
+                # check if nan exists in ssm_out
+                if torch.isnan(ssm_out).any():
+                    print("NaN ssm_out")
+                    continue
+                
                 # Get a random timestep
                 t = torch.randint(0, diffusion.num_timesteps, (f,), device=videos.device)
 
