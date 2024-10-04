@@ -46,7 +46,7 @@ def parse_args():
                         help='directory to save checkpoints')
     
     # training parameters
-    parser.add_argument("--vae", type=str, choices=["ema", "mse"], default="mse")  # Choice doesn't affect training
+    parser.add_argument("--vae", type=str, choices=["ema", "mse"], default="ema")  # Choice doesn't affect training
     parser.add_argument('--seed', default=42, type=int,
                         help='seed for initializing training. ')
     parser.add_argument('--device', default='cuda', type=str,
