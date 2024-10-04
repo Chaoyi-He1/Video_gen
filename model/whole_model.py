@@ -47,12 +47,17 @@ class SSM_block(nn.Module):
     def forward(self, **Token_text):
         TextEncoderOutput = self.textencoder(**Token_text)
         
-        ssm_in = TextEncoderOutput.permute(0, 2, 1).contiguous() # (batch, dim, num_frames)
+        ssm_in = TextEncoderOutput  # (batch, num_frames, dim)      #   .permute(0, 2, 1).contiguous() 
         ssm_out = self.mamba(ssm_in)
-        ssm_out = ssm_out.permute(0, 2, 1).contiguous()  # (batch, num_frames, dim)
+        # ssm_out = ssm_out.permute(0, 2, 1).contiguous()  # (batch, num_frames, dim)
         
         # combine ssm_out first two dimensions, as well as video first two dimensions
         ssm_out = ssm_out
+        
+        # concat ssm_out with previous ssm_out
+        history = torch.cat([torch.zeros_like(ssm_out[:, :1, :]), ssm_out[:, :-1, :]], 1)
+        ssm_out = torch.cat([ssm_out, history], 2)
+        
         return ssm_out
     
     def forward_generation(self, **Token_text):
@@ -91,7 +96,7 @@ def create_model(config: dict, is_train: bool=True):
         "input_size": config["dit_input_size"],
         "in_channels": config["dit_in_channels"],
         "learn_sigma": config["dit_learn_sigma"],
-        "latent_size": config["input_dim"],
+        "latent_size": config["input_dim"] * 2,
     }
     
     dit_name = config["dit_name"]

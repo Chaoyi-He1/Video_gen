@@ -50,6 +50,7 @@ def sampling(
                 
                 samples = vae.decode(samples / 0.18215).sample
                 print("samples range: ", samples.min(), samples.max())
+                samples = (samples - samples.min()) / (samples.max() - samples.min())
                 
                 # check if nan exists
                 if torch.isnan(samples).any():
