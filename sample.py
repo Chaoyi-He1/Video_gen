@@ -95,7 +95,7 @@ def main(args):
     Path(args.save_dir).mkdir(parents=True, exist_ok=True)
     
     # create model
-    ssm_model, dit_model, diffusion = create_model(config, is_train=True)
+    ssm_model, dit_model, diffusion = create_model(config, is_train=False)
     tokenizer = CLIPTextTokenizer(model_dir=config["textencoder"])
     vae = AutoencoderKL.from_pretrained(f"stabilityai/sd-vae-ft-{args.vae}").to(device)
     

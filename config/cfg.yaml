@@ -32,5 +32,7 @@ dit_input_size: 64  # img_size // 8
 dit_in_channels: 4
 dit_learn_sigma: True
 
+num_sampling_steps: 250
+
 # Training parameters
 mini_frames: 112
