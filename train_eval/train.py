@@ -41,60 +41,59 @@ def train_one_epoch(
                 videos = torch.cat([vae.module.encode(videos[i: i+mini_frames, ...]).latent_dist.sample().mul_(0.18215) 
                                     for i in range(0, b*f, mini_frames)], dim=0) 
                 
-                videos = videos.view(b, f, c+1, h//8, w//8)
+                videos = videos.view(b, f, c+1, h//8, w//8).transpose(1, 2)
         
         # Loop over smaller mini-batches (chunks)
-        for i in range(b):
-            with torch.amp.autocast('cuda', enabled=scaler is not None):
-                # Move the forward pass inside the loop
-                ssm_out = ssm_model(**captions)
-                
-                # check if nan exists in ssm_out
-                if torch.isnan(ssm_out).any():
-                    print("NaN ssm_out")
-                    continue
-                
-                # Get a random timestep
-                t = torch.randint(0, diffusion.num_timesteps, (f,), device=videos.device)
+        with torch.amp.autocast('cuda', enabled=scaler is not None):
+            # Move the forward pass inside the loop
+            ssm_out = ssm_model(**captions)
+            
+            # check if nan exists in ssm_out
+            if torch.isnan(ssm_out).any():
+                print("NaN ssm_out")
+                continue
+            
+            # Get a random timestep
+            t = torch.randint(0, diffusion.num_timesteps, (b,), device=videos.device)
 
-                # Compute the loss
-                model_kwargs = dict(y=ssm_out[i, ...])
-                loss_dict = diffusion.training_losses(DiT_model, videos[i, ...], t, model_kwargs)
-                loss = loss_dict["loss"].mean()
-                
-                if loss.isnan():
-                    print("NaN loss")
-                    optimizer.zero_grad()
-                    # clear cache and gradients in the model
-                    torch.cuda.empty_cache()
-                    ssm_model.zero_grad()
-                    DiT_model.zero_grad()
-                    continue
-                
+            # Compute the loss
+            model_kwargs = dict(y=ssm_out)
+            loss_dict = diffusion.training_losses(DiT_model, videos, t, model_kwargs)
+            loss = loss_dict["loss"].mean()
+            
+            if loss.isnan():
+                print("NaN loss")
                 optimizer.zero_grad()
-                
-                # Backward pass
+                # clear cache and gradients in the model
+                torch.cuda.empty_cache()
+                ssm_model.zero_grad()
+                DiT_model.zero_grad()
+                continue
+            
+            optimizer.zero_grad()
+            
+            # Backward pass
+            if scaler is not None:
+                scaler.scale(loss).backward()
+            else:
+                loss.backward()
+            
+            if max_norm > 0:
                 if scaler is not None:
-                    scaler.scale(loss).backward()
-                else:
-                    loss.backward()
-                
-                if max_norm > 0:
-                    if scaler is not None:
-                        scaler.unscale_(optimizer)
-                    # Gradient clipping for ssm_model and DiT_model
-                    torch.nn.utils.clip_grad_norm_(ssm_model.parameters(), max_norm)
-                    torch.nn.utils.clip_grad_norm_(DiT_model.parameters(), max_norm)
-                
-                # Optimizer step
-                if scaler is not None:
-                    scaler.step(optimizer)
-                    scaler.update()
-                else:
-                    optimizer.step()
-                
-                # Update metrics
-                metric_logger.update(loss=loss.item())
+                    scaler.unscale_(optimizer)
+                # Gradient clipping for ssm_model and DiT_model
+                torch.nn.utils.clip_grad_norm_(ssm_model.parameters(), max_norm)
+                torch.nn.utils.clip_grad_norm_(DiT_model.parameters(), max_norm)
+            
+            # Optimizer step
+            if scaler is not None:
+                scaler.step(optimizer)
+                scaler.update()
+            else:
+                optimizer.step()
+            
+            # Update metrics
+            metric_logger.update(loss=loss.item())
                 
         metric_logger.update(lr=optimizer.param_groups[0]["lr"])    
     metric_logger.synchronize_between_processes()

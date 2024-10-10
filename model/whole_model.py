@@ -56,34 +56,6 @@ class SSM_block(nn.Module):
         ssm_out = torch.cat([ssm_out, history], 2)
         
         return ssm_out
-    
-    def forward_generation(self, **Token_text):
-        TextEncoderOutput = self.textencoder(**Token_text)
-        
-        ssm_in = TextEncoderOutput.permute(0, 2, 1).contiguous() # (batch, dim, num_frames)
-        ssm_out = self.mamba(ssm_in)
-        ssm_out = ssm_out.permute(0, 2, 1).contiguous()  # (batch, num_frames, dim)
-        
-        b, f, _ = ssm_out.shape
-        # combine ssm_out first two dimensions, as well as video first two dimensions
-        ssm_out = ssm_out.view(b*f, -1)
-        
-        z = torch.randn(b*f, 4, self.dit.input_size, self.dit.input_size, device=ssm_out.device)
-        
-        # Setup classifier-free guidance:
-        z = torch.cat([z, z], 0)
-        # repeat self.dit.y_embedder.cfg_embedding b*f times and concatenate with ssm_out
-        y_null = self.dit.y_embedder.cfg_embedding.repeat(b*f, 1)
-        y = torch.cat([ssm_out, y_null], 0)
-        model_kwargs = dict(y=y, cfg_scale=4.0)
-        
-        # Sample images:
-        samples = self.diffusion.p_sample_loop(
-            self.dit.forward_with_cfg, z.shape, z, clip_denoised=False, 
-            model_kwargs=model_kwargs, progress=True, device=z.device
-        )
-        samples, _ = samples.chunk(2, dim=0)  # Remove null class samples
-        return samples
 
 
 def create_model(config: dict, is_train: bool=True):

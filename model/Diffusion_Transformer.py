@@ -6,7 +6,20 @@ from timm.models.vision_transformer import PatchEmbed, Attention, Mlp
 
 
 def modulate(x, shift, scale):
-    return x * (1 + scale.unsqueeze(1)) + shift.unsqueeze(1)
+    '''
+    x: (N, F * T, D)
+    shift: (N, F, D)
+    scale: (N, F, D)
+    For each frame in F, modulate the input tensor x with the shift and scale values.
+    '''
+    N, FT, D = x.shape
+    F = shift.shape[1]
+    x = x.view(N, F, FT // F, D)
+    shift = shift.unsqueeze(2)
+    scale = scale.unsqueeze(2)
+    x = x * (1 + scale) + shift
+    return x.view(N, FT, D)
+    # return x * (1 + scale.unsqueeze(1)) + shift.unsqueeze(1)
 
 
 class TimestepEmbedder(nn.Module):
@@ -104,7 +117,7 @@ class DiTBlock(nn.Module):
         )
 
     def forward(self, x, c):
-        shift_msa, scale_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp = self.adaLN_modulation(c).chunk(6, dim=1)
+        shift_msa, scale_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp = self.adaLN_modulation(c).chunk(6, dim=-1)
         x = x + gate_msa.unsqueeze(1) * self.attn(modulate(self.norm1(x), shift_msa, scale_msa))
         x = x + gate_mlp.unsqueeze(1) * self.mlp(modulate(self.norm2(x), shift_mlp, scale_mlp))
         return x
@@ -124,7 +137,7 @@ class FinalLayer(nn.Module):
         )
 
     def forward(self, x, c):
-        shift, scale = self.adaLN_modulation(c).chunk(2, dim=1)
+        shift, scale = self.adaLN_modulation(c).chunk(2, dim=-1)
         x = modulate(self.norm_final(x), shift, scale)
         x = self.linear(x)
         return x
@@ -139,6 +152,7 @@ class DiT(nn.Module):
         input_size=32,
         patch_size=2,
         in_channels=4,
+        num_frames=56,
         hidden_size=512,
         depth=28,
         num_heads=16,
@@ -154,13 +168,14 @@ class DiT(nn.Module):
         self.patch_size = patch_size
         self.num_heads = num_heads
         self.input_size = input_size
+        self.num_frames = num_frames
 
         self.x_embedder = PatchEmbed(input_size, patch_size, in_channels, hidden_size, bias=True)
-        self.t_embedder = TimestepEmbedder(hidden_size)
-        self.y_embedder = LatentEmbedder(latent_size, hidden_size, class_dropout_prob)
+        self.t_embedder = TimestepEmbedder(hidden_size // 2)
+        self.y_embedder = LatentEmbedder(latent_size, hidden_size // 2, class_dropout_prob)
         num_patches = self.x_embedder.num_patches
         # Will use fixed sin-cos embedding:
-        self.pos_embed = nn.Parameter(torch.zeros(1, num_patches, hidden_size), requires_grad=True)
+        self.pos_embed = nn.Parameter(torch.zeros(1, num_patches * self.num_frames, hidden_size), requires_grad=False)
 
         self.blocks = nn.ModuleList([
             DiTBlock(hidden_size, num_heads, mlp_ratio=mlp_ratio) for _ in range(depth)
@@ -208,34 +223,38 @@ class DiT(nn.Module):
 
     def unpatchify(self, x):
         """
-        x: (N, T, patch_size**2 * C)
-        imgs: (N, H, W, C)
+        x: (N, F * T, patch_size**2 * C)
+        imgs: (N, F, H, W, C)
         """
         c = self.out_channels
         p = self.x_embedder.patch_size[0]
-        h = w = int(x.shape[1] ** 0.5)
+        f = self.num_frames
+        h = w = int(x.shape[1] // f ** 0.5)
         assert h * w == x.shape[1]
 
-        x = x.reshape(shape=(x.shape[0], h, w, p, p, c))
-        x = torch.einsum('nhwpqc->nchpwq', x)
-        imgs = x.reshape(shape=(x.shape[0], c, h * p, h * p))
+        x = x.reshape(shape=(x.shape[0], f, h, w, p, p, c))
+        x = torch.einsum('nfhwpqc->ncfhpwq', x)
+        imgs = x.reshape(shape=(x.shape[0], c, f, h * p, h * p))
         return imgs
 
     def forward(self, x, t, y):
         """
         Forward pass of DiT.
-        x: (N, C, H, W) tensor of spatial inputs (images or latent representations of images)
+        x: (N, C, F, H, W) tensor of spatial inputs (images or latent representations of images of the video, F frames)
         t: (N,) tensor of diffusion timesteps
         y: (N, dim) tensor from Mamba's output of each frame's latent representation
         """
-        x = self.x_embedder(x) + self.pos_embed  # (N, T, D), where T = H * W / patch_size ** 2
-        t = self.t_embedder(t)                   # (N, D)
-        y = self.y_embedder(y, self.training)    # (N, D)
-        c = t + y                                # (N, D)
+        x = x.transpose(1, 2).flatten(0, 1)             # (N, C, F, H, W) -> (N, F, C, H, W) -> (N * F, C, H, W)
+        x = self.x_embedder(x)                          # (N * F, T, D), where T = H * W / patch_size ** 2
+        x = x.view(-1, self.num_frames, *x.shape[1:])   # (N, F, T, D)
+        x = x.flatten(1, 2) + self.pos_embed            # (N, F * T, D) + (1, F * T, D)                             
+        t = self.t_embedder(t)                          # (N, D / 2)
+        y = self.y_embedder(y, self.training)           # (N, F, D / 2)
+        c = torch.cat([t.unsqueeze(1), y], -1)          # (N, F, D)
         for block in self.blocks:
-            x = block(x, c)                      # (N, T, D)
-        x = self.final_layer(x, c)                # (N, T, patch_size ** 2 * out_channels)
-        x = self.unpatchify(x)                   # (N, out_channels, H, W)
+            x = block(x, c)                             # (N, F * T, D)
+        x = self.final_layer(x, c)                      # (N, F * T, patch_size ** 2 * out_channels)
+        x = self.unpatchify(x)                          # (N, out_channels, F, H, W)
         return x
 
     def forward_with_cfg(self, x, t, y, cfg_scale):
