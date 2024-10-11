@@ -47,9 +47,19 @@ class SSM_block(nn.Module):
     def forward(self, **Token_text):
         TextEncoderOutput = self.textencoder(**Token_text)
         
+        # check if nan exists in TextEncoderOutput
+        if torch.isnan(TextEncoderOutput).any():
+            print("NaN TextEncoderOutput")
+            return None
+        
         ssm_in = TextEncoderOutput  # (batch, num_frames, dim)
         ssm_out = self.mamba(ssm_in.transpose(1, 2))
         ssm_out = ssm_out.transpose(1, 2)  # (batch, num_frames, dim)
+        
+        # check if nan exists in ssm_out
+        if torch.isnan(ssm_out).any():
+            print("NaN ssm_out")
+            return None
         
         # concat ssm_out with previous ssm_out
         history = torch.cat([torch.zeros_like(ssm_out[:, :1, :]), ssm_out[:, :-1, :]], 1)
