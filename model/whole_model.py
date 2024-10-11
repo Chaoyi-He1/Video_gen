@@ -66,6 +66,7 @@ def create_model(config: dict, is_train: bool=True):
         "in_channels": config["dit_in_channels"],
         "learn_sigma": config["dit_learn_sigma"],
         "latent_size": config["input_dim"] * 2,
+        "num_frames": config["num_frames"],
     }
     
     dit_name = config["dit_name"]
