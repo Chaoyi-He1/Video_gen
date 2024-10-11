@@ -92,10 +92,13 @@ class LatentEmbedder(nn.Module):
         return labels
 
     def forward(self, latents, train, force_drop_ids=None):
+        b, f, d = latents.shape
+        latents = latents.view(-1, d)
         use_dropout = self.dropout_prob > 0
         if (train and use_dropout) or (force_drop_ids is not None):
             latents = self.token_drop(latents, force_drop_ids)
         latents = self.projection(latents)
+        latents = latents.view(b, f, self.hidden_size)
         return latents
 
 
