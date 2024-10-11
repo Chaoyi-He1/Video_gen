@@ -251,9 +251,10 @@ class DiT(nn.Module):
         x = self.x_embedder(x)                          # (N * F, T, D), where T = H * W / patch_size ** 2
         x = x.view(-1, self.num_frames, *x.shape[1:])   # (N, F, T, D)
         x = x.flatten(1, 2) + self.pos_embed            # (N, F * T, D) + (1, F * T, D)                             
-        t = self.t_embedder(t)                          # (N, D / 2)
+        t = self.t_embedder(t).unsqueeze(1)             # (N, 1, D / 2)
+        t = t.repeat(1, self.num_frames, 1)             # (N, F, D / 2)
         y = self.y_embedder(y, self.training)           # (N, F, D / 2)
-        c = torch.cat([t.unsqueeze(1), y], -1)          # (N, F, D)
+        c = torch.cat([t, y], -1)          # (N, F, D)
         for block in self.blocks:
             x = block(x, c)                             # (N, F * T, D)
         x = self.final_layer(x, c)                      # (N, F * T, patch_size ** 2 * out_channels)
