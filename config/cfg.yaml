@@ -23,7 +23,7 @@ decoder_activation: "gelu"
 decoder_num_layers: 4
 
 # mamba model
-mamba_n_layer: 24
+mamba_n_layer: 16
 mamba_d_state: 128
 
 # DiT model
@@ -35,4 +35,4 @@ dit_learn_sigma: True
 num_sampling_steps: 250
 
 # Training parameters
-mini_frames: 112
+mini_frames: 70

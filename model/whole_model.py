@@ -43,6 +43,13 @@ class SSM_block(nn.Module):
                        self.textencoder.textencoder.config.hidden_size))
         
         self.mamba = BiMamba2_1D(**self.mamba_config)
+        
+        self.initialize_weights()
+    
+    def initialize_weights(self):
+        for p in self.parameters():
+            if p.requires_grad and len(p.shape) > 1:
+                nn.init.xavier_uniform_(p)
     
     def forward(self, **Token_text):
         TextEncoderOutput = self.textencoder(**Token_text)
@@ -59,6 +66,10 @@ class SSM_block(nn.Module):
         # check if nan exists in ssm_out
         if torch.isnan(ssm_out).any():
             print("NaN ssm_out")
+            # find if the ssm parameters are nan
+            for n, p in self.named_parameters():
+                if torch.isnan(p).any():
+                    print("NaN in {}".format(n))
             return None
         
         # concat ssm_out with previous ssm_out

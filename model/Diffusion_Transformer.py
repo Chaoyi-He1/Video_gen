@@ -236,8 +236,8 @@ class DiT(nn.Module):
         c = self.out_channels
         p = self.x_embedder.patch_size[0]
         f = self.num_frames
-        h = w = int(x.shape[1] // f ** 0.5)
-        assert h * w == x.shape[1]
+        h = w = int((x.shape[1] // f) ** 0.5)
+        assert h * w == x.shape[1] // f, f"Invalid number of patches: {h * w} != {x.shape[1] // f}"
 
         x = x.reshape(shape=(x.shape[0], f, h, w, p, p, c))
         x = torch.einsum('nfhwpqc->ncfhpwq', x)
