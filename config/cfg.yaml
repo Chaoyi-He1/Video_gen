@@ -24,7 +24,7 @@ decoder_num_layers: 4
 
 # mamba model
 mamba_n_layer: 24
-mamba_d_state: 512
+mamba_d_state: 128
 
 # DiT model
 dit_name: "DiT-L/8"

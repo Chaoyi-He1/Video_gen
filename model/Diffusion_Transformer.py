@@ -121,8 +121,12 @@ class DiTBlock(nn.Module):
 
     def forward(self, x, c):
         shift_msa, scale_msa, gate_msa, shift_mlp, scale_mlp, gate_mlp = self.adaLN_modulation(c).chunk(6, dim=-1)
-        x = x + gate_msa.unsqueeze(1) * self.attn(modulate(self.norm1(x), shift_msa, scale_msa))
-        x = x + gate_mlp.unsqueeze(1) * self.mlp(modulate(self.norm2(x), shift_mlp, scale_mlp))
+        
+        gate_msa = gate_msa.unsqueeze(2).repeat(1, 1, x.shape[1] // gate_msa.shape[1], 1).flatten(1, 2)
+        gate_mlp = gate_mlp.unsqueeze(2).repeat(1, 1, x.shape[1] // gate_mlp.shape[1], 1).flatten(1, 2)
+        
+        x = x + gate_msa * self.attn(modulate(self.norm1(x), shift_msa, scale_msa))
+        x = x + gate_mlp * self.mlp(modulate(self.norm2(x), shift_mlp, scale_mlp))
         return x
 
 
@@ -254,7 +258,7 @@ class DiT(nn.Module):
         t = self.t_embedder(t).unsqueeze(1)             # (N, 1, D / 2)
         t = t.repeat(1, self.num_frames, 1)             # (N, F, D / 2)
         y = self.y_embedder(y, self.training)           # (N, F, D / 2)
-        c = torch.cat([t, y], -1)          # (N, F, D)
+        c = torch.cat([t, y], -1)                       # (N, F, D)
         for block in self.blocks:
             x = block(x, c)                             # (N, F * T, D)
         x = self.final_layer(x, c)                      # (N, F * T, patch_size ** 2 * out_channels)
