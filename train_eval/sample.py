@@ -26,14 +26,13 @@ def sampling(
             with torch.no_grad():
                 ssm_out = ssm_model(**captions)
                 b, f, _ = ssm_out.shape
-                ssm_out = ssm_out.view(b*f, -1)
                 
-                z = torch.randn(b*f, 4, DiT_model.input_size, DiT_model.input_size, device=ssm_out.device)
+                z = torch.randn(b, 4, f, DiT_model.input_size, DiT_model.input_size, device=ssm_out.device)
                 # Setup classifier-free guidance:
                 z = torch.cat([z, z], 0)
                 
                 # repeat self.dit.y_embedder.cfg_embedding b*f times and concatenate with ssm_out
-                y_null = DiT_model.y_embedder.cfg_embedding.repeat(b*f, 1)
+                y_null = DiT_model.y_embedder.cfg_embedding.repeat(b*f, 1).view(b, f, -1)
                 y = torch.cat([ssm_out, y_null], 0)
                 model_kwargs = dict(y=y, cfg_scale=4.0)
                 
@@ -48,6 +47,7 @@ def sampling(
                     print("NaN samples")
                     continue
                 
+                samples = samples.transpose(1, 2).view(b*f, 4, DiT_model.input_size, DiT_model.input_size)
                 samples = vae.decode(samples / 0.18215).sample
                 print("samples range: ", samples.min(), samples.max())
                 samples = (samples - samples.min()) / (samples.max() - samples.min())
