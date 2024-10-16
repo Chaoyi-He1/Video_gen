@@ -48,7 +48,7 @@ def sampling(
                     continue
                 
                 samples = samples.transpose(1, 2).view(b*f, 4, DiT_model.input_size, DiT_model.input_size)
-                samples = vae.decode(samples / 0.18215).sample
+                samples = torch.cat([vae.decode(samples[i:i+4, ...] / 0.18215).sample for i in range(0, b*f, 4)], dim=0)
                 print("samples range: ", samples.min(), samples.max())
                 samples = (samples - samples.min()) / (samples.max() - samples.min())
                 
