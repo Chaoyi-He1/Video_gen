@@ -35,4 +35,4 @@ dit_learn_sigma: True
 num_sampling_steps: 250
 
 # Training parameters
-mini_frames: 70
+mini_frames: 10

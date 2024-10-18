@@ -79,13 +79,14 @@ class SSM_input_projection(nn.Module):
     def forward(self, **Token_text):
         TextEncoderOutput = self.textencoder(**Token_text)
         last_hidden_state = TextEncoderOutput.last_hidden_state.permute(1, 0, 2).contiguous()
-        pooled_output = TextEncoderOutput.pooler_output
+        pooled_output = TextEncoderOutput.pooler_output.unsqueeze(1)
         
+        querries = self.querries
         for i, layer in enumerate(self.querries_proj):
             if i == len(self.querries_proj) - 1:
-                self.querries = layer(self.querries)
+                querries = layer(querries)
             else:
-                self.querries = layer(pooled_output, self.querries)
+                querries = layer(pooled_output, querries)
         
         # tgt_mask = (1 - torch.tril(torch.ones(self.num_frames, self.num_frames))).bool().to(querries.device)
         
