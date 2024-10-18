@@ -132,18 +132,20 @@ def main(args):
         checkpoint = torch.load(args.resume, map_location='cpu', weights_only=False)
         
         try:
-            ssm_model.load_state_dict(checkpoint['ssm_model'], strict=True)
-            dit_model.load_state_dict(checkpoint['dit_model'], strict=True)
+            ssm_model.load_state_dict(checkpoint['ssm_model'], strict=False)
+            dit_model.load_state_dict(checkpoint['dit_model'], strict=False)
         except KeyError as e:
             s = "%s is not compatible with %s. Specify --resume=.../model.pth" % (args.resume, args.config)
             raise KeyError(s) from e
         
-        for p_model, p_checkpoint in zip(ssm_model.parameters(), checkpoint['ssm_model'].values()):
-            assert torch.equal(p_model, p_checkpoint), "Model and checkpoint parameters are not equal"
-        print("SSM model loaded correctly")
-        for p_model, p_checkpoint in zip(dit_model.parameters(), checkpoint['dit_model'].values()):
-            assert torch.equal(p_model, p_checkpoint), "Model and checkpoint parameters are not equal"
-        print("DiT model loaded correctly")
+        # for n_model, p_model, n_checkpoint, p_checkpoint in zip(ssm_model.named_parameters(), checkpoint['ssm_model'].items()):
+        #     if not torch.equal(p_model, p_checkpoint):
+        #         print(f"Model and checkpoint parameters are not equal: model: {n_model}, checkpoint: {n_checkpoint}")
+        # print("SSM model loaded correctly")
+        # for n_model, p_model, n_checkpoint, p_checkpoint in zip(dit_model.named_parameters(), checkpoint['dit_model'].items()):
+        #     if not torch.equal(p_model, p_checkpoint):
+        #         print(f"Model and checkpoint parameters are not equal: model: {n_model}, checkpoint: {n_checkpoint}")
+        # print("DiT model loaded correctly")
         
         start_epoch = checkpoint['epoch'] + 1
         scaler.load_state_dict(checkpoint['scaler'])
@@ -188,7 +190,9 @@ def main(args):
     optimizer = torch.optim.AdamW(p_to_optimize, lr=args.lr)
     lf = lambda x: ((1 + math.cos(x * math.pi / args.epochs)) / 2) * (1 - args.lrf) + args.lrf
     scheduler = lr_scheduler.LambdaLR(optimizer, lr_lambda=lf)
-    scheduler.last_epoch = start_epoch
+    scheduler.last_epoch = start_epoch - 1
+    if args.resume.endswith('.pth'):
+        scheduler.step()
     
     # create data loaders
     dataset = PTDataset(

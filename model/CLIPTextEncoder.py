@@ -22,6 +22,23 @@ def CreateTextEncoder(model_name="openai/clip-vit-large-patch16", freeze=False, 
     return TextEncoder
 
 
+class ConcatSquashLinear(nn.Module):
+    def __init__(self, dim_in, dim_out, dim_ctx):
+        super(ConcatSquashLinear, self).__init__()
+        self._layer = nn.Linear(dim_in, dim_out)
+        self._hyper_bias = nn.Linear(dim_ctx, dim_out, bias=False)
+        self._hyper_gate = nn.Linear(dim_ctx, dim_out)
+
+    def forward(self, ctx, x):
+        gate = torch.sigmoid(self._hyper_gate(ctx))
+        bias = self._hyper_bias(ctx)
+        # if x.dim() == 3:
+        #     gate = gate.unsqueeze(1)
+        #     bias = bias.unsqueeze(1)
+        ret = self._layer(x) * gate + bias
+        return ret
+
+
 class SSM_input_projection(nn.Module):
     def __init__(self, config: dict):
         super(SSM_input_projection, self).__init__()
@@ -36,7 +53,16 @@ class SSM_input_projection(nn.Module):
         
         self.input_dim = self.textencoder.config.hidden_size
         
-        self.querries = nn.Conv1d(1, self.num_frames, 1)
+        self.querries = nn.Parameter(torch.randn(1, self.num_frames, self.input_dim))
+        self.querries_proj = nn.ModuleList([
+            ConcatSquashLinear(self.input_dim, self.input_dim, self.input_dim),
+            ConcatSquashLinear(self.input_dim, self.input_dim, self.input_dim),
+            ConcatSquashLinear(self.input_dim, self.input_dim, self.input_dim),
+            ConcatSquashLinear(self.input_dim, self.input_dim, self.input_dim),
+            ConcatSquashLinear(self.input_dim, self.input_dim, self.input_dim),
+            ConcatSquashLinear(self.input_dim, self.input_dim, self.input_dim),
+            nn.LayerNorm(self.input_dim),
+        ])
         
         decoder_layer = nn.TransformerDecoderLayer(
             d_model=self.textencoder.config.hidden_size,
@@ -55,12 +81,16 @@ class SSM_input_projection(nn.Module):
         last_hidden_state = TextEncoderOutput.last_hidden_state.permute(1, 0, 2).contiguous()
         pooled_output = TextEncoderOutput.pooler_output
         
-        querries = self.querries(pooled_output.unsqueeze(1)).permute(1, 0, 2).contiguous()
+        for i, layer in enumerate(self.querries_proj):
+            if i == len(self.querries_proj) - 1:
+                self.querries = layer(self.querries)
+            else:
+                self.querries = layer(pooled_output, self.querries)
         
         # tgt_mask = (1 - torch.tril(torch.ones(self.num_frames, self.num_frames))).bool().to(querries.device)
         
         SSM_input = self.projection_block(
-            tgt=querries,
+            tgt=self.querries,
             memory=last_hidden_state,
             # tgt_mask=tgt_mask
         )
