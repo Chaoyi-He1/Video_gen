@@ -61,7 +61,7 @@ def parse_args():
                         help='start epoch')
     parser.add_argument('--print_freq', default=200, type=int,
                         help='print frequency')
-    parser.add_argument('--save_freq', default=5, type=int,
+    parser.add_argument('--save_freq', default=1, type=int,
                         help='save frequency')
     
     # optimizer parameters
@@ -69,7 +69,7 @@ def parse_args():
                         help='initial learning rate')
     parser.add_argument('--lrf', default=0.1, type=float,
                         help='learning rate factor')
-    parser.add_argument('--clip_max_norm', default=.1, type=float,
+    parser.add_argument('--clip_max_norm', default=.01, type=float,
                         help='gradient clipping max norm')
     
     # distributed training parameter

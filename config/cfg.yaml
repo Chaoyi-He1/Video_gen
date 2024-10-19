@@ -25,8 +25,8 @@ decoder_num_layers: 12
 num_querries_concats_layers: 12
 
 # mamba model
-mamba_n_layer: 24
-mamba_d_state: 128
+mamba_n_layer: 12
+mamba_d_state: 512
 
 # DiT model
 dit_name: "DiT-XL/4"

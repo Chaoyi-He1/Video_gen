@@ -73,6 +73,10 @@ class SSM_block(nn.Module):
             for n, p in self.named_parameters():
                 if torch.isnan(p).any():
                     print("NaN in {}".format(n))
+            # find ssm_out nan position
+            print("ssm_out nan position:")
+            print(torch.isnan(ssm_out))
+            
             return None
         
         # concat ssm_out with previous ssm_out
