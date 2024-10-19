@@ -10,11 +10,14 @@ class SSM_block(nn.Module):
     def __init__(self, config: dict, is_train: bool=True) -> None:
         super(SSM_block, self).__init__()
         self.clip_config = {
+            # text encoder from CLIP
             "input_dim": config["input_dim"],
             "num_frames": config["num_frames"],
             "textencoder": config["textencoder"],
             "textencoder_freeze": config["textencoder_freeze"],
             "textencoder_projection": config["textencoder_projection"],
+            # text query projection and ssm input projection
+            "num_querries_concats_layers": config["num_querries_concats_layers"],
             "decoder_nhead": config["decoder_nhead"],
             "decoder_dim_feedforward": config["decoder_dim_feedforward"],
             "decoder_dropout": config["decoder_dropout"],
