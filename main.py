@@ -53,7 +53,7 @@ def parse_args():
                         help='device to use for training / testing')
     parser.add_argument('--num_workers', default=4, type=int,
                         help='number of data loading workers')
-    parser.add_argument('--batch_size', default=10, type=int,
+    parser.add_argument('--batch_size', default=8, type=int,
                         help='input batch size for training')
     parser.add_argument('--epochs', default=500, type=int,
                         help='number of epochs to train')
@@ -138,14 +138,14 @@ def main(args):
             s = "%s is not compatible with %s. Specify --resume=.../model.pth" % (args.resume, args.config)
             raise KeyError(s) from e
         
-        # for n_model, p_model, n_checkpoint, p_checkpoint in zip(ssm_model.named_parameters(), checkpoint['ssm_model'].items()):
-        #     if not torch.equal(p_model, p_checkpoint):
-        #         print(f"Model and checkpoint parameters are not equal: model: {n_model}, checkpoint: {n_checkpoint}")
-        # print("SSM model loaded correctly")
-        # for n_model, p_model, n_checkpoint, p_checkpoint in zip(dit_model.named_parameters(), checkpoint['dit_model'].items()):
-        #     if not torch.equal(p_model, p_checkpoint):
-        #         print(f"Model and checkpoint parameters are not equal: model: {n_model}, checkpoint: {n_checkpoint}")
-        # print("DiT model loaded correctly")
+        for n_model, p_model, n_checkpoint, p_checkpoint in zip(ssm_model.named_parameters(), checkpoint['ssm_model'].items()):
+            if not torch.equal(p_model, p_checkpoint):
+                print(f"Model and checkpoint parameters are not equal: model: {n_model}, checkpoint: {n_checkpoint}")
+        print("SSM model loaded correctly")
+        for n_model, p_model, n_checkpoint, p_checkpoint in zip(dit_model.named_parameters(), checkpoint['dit_model'].items()):
+            if not torch.equal(p_model, p_checkpoint):
+                print(f"Model and checkpoint parameters are not equal: model: {n_model}, checkpoint: {n_checkpoint}")
+        print("DiT model loaded correctly")
         
         start_epoch = checkpoint['epoch'] + 1
         scaler.load_state_dict(checkpoint['scaler'])
