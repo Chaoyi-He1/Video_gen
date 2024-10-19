@@ -16,11 +16,13 @@ num_frames: 56
 textencoder: "openai/clip-vit-large-patch14"  # "openai/clip-vit-base-patch32", "openai/clip-vit-base-patch16", "openai/clip-vit-large-patch14", "openai/clip-vit-large-patch14-336",
 textencoder_freeze: True
 textencoder_projection: False
-decoder_nhead: 4
+
+decoder_nhead: 12
 decoder_dim_feedforward: 2048
 decoder_dropout: 0.1
 decoder_activation: "gelu"
 decoder_num_layers: 12
+num_querries_concats_layers: 12
 
 # mamba model
 mamba_n_layer: 24
