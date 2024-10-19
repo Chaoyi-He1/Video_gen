@@ -35,6 +35,9 @@ def train_one_epoch(
         b, f, c, h, w = videos.shape
         assert b*f % mini_frames == 0, f"Batch x Frames ({b*f}) should be divisible by mini_frames ({mini_frames})"
         
+        # send vae to device for video encoding, then send it back to cpu for gpu memory saving
+        vae.to(device)
+        vae.eval()
         with torch.amp.autocast('cuda', enabled=scaler is not None): 
             with torch.no_grad():
                 videos = videos.view(b*f, c, h, w)
@@ -42,6 +45,7 @@ def train_one_epoch(
                                     for i in range(0, b*f, mini_frames)], dim=0) 
                 
                 videos = videos.view(b, f, c+1, h//8, w//8).transpose(1, 2)
+        vae.cpu()
         
         # Loop over smaller mini-batches (chunks)
         with torch.amp.autocast('cuda', enabled=scaler is not None):
