@@ -20,14 +20,14 @@ decoder_nhead: 4
 decoder_dim_feedforward: 2048
 decoder_dropout: 0.1
 decoder_activation: "gelu"
-decoder_num_layers: 4
+decoder_num_layers: 12
 
 # mamba model
-mamba_n_layer: 16
+mamba_n_layer: 24
 mamba_d_state: 128
 
 # DiT model
-dit_name: "DiT-L/8"
+dit_name: "DiT_XL_4"
 dit_input_size: 64  # img_size // 8
 dit_in_channels: 4
 dit_learn_sigma: True
