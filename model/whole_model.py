@@ -45,7 +45,7 @@ class SSM_block(nn.Module):
                        config["input_dim"], 
                        self.textencoder.textencoder.config.hidden_size))
         
-        self.mamba = BiMamba2_1D(**self.mamba_config)
+        # self.mamba = BiMamba2_1D(**self.mamba_config)
         
         self.initialize_weights()
     
@@ -57,27 +57,21 @@ class SSM_block(nn.Module):
     def forward(self, **Token_text):
         TextEncoderOutput = self.textencoder(**Token_text)
         
-        # check if nan exists in TextEncoderOutput
-        if torch.isnan(TextEncoderOutput).any():
-            print("NaN TextEncoderOutput")
-            return None
+        # ssm_in = TextEncoderOutput.transpose(1, 2)  # (batch, num_frames, dim) -> (batch, dim, num_frames)
+        # ssm_out = self.mamba(ssm_in)
+        # ssm_out = ssm_out.transpose(1, 2)           # (batch, dim, num_frames) -> (batch, num_frames, dim)
         
-        ssm_in = TextEncoderOutput.transpose(1, 2)  # (batch, num_frames, dim) -> (batch, dim, num_frames)
-        ssm_out = self.mamba(ssm_in)
-        ssm_out = ssm_out.transpose(1, 2)           # (batch, num_frames, dim)
-        
-        # check if nan exists in ssm_out
-        if torch.isnan(ssm_out).any():
-            print("NaN ssm_out")
-            # find if the ssm parameters are nan
-            for n, p in self.named_parameters():
-                if torch.isnan(p).any():
-                    print("NaN in {}".format(n))
-            # find ssm_out nan position
-            print("ssm_out nan position:")
-            print(torch.isnan(ssm_out))
-            
-            return None
+        # # check if nan exists in ssm_out
+        # if torch.isnan(ssm_out).any():
+        #     print("NaN ssm_out")
+        #     # find if the ssm parameters are nan
+        #     for n, p in self.named_parameters():
+        #         if torch.isnan(p).any():
+        #             print("NaN in {}".format(n))
+        #     # find ssm_out nan position
+        #     print("ssm_out nan position:")
+        #     print(torch.isnan(ssm_out))
+        ssm_out = TextEncoderOutput
         
         # concat ssm_out with previous ssm_out
         history = torch.cat([torch.zeros_like(ssm_out[:, :1, :]), ssm_out[:, :-1, :]], 1)

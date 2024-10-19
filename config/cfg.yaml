@@ -25,8 +25,8 @@ decoder_num_layers: 12
 num_querries_concats_layers: 12
 
 # mamba model
-mamba_n_layer: 12
-mamba_d_state: 512
+mamba_n_layer: 8
+mamba_d_state: 256
 
 # DiT model
 dit_name: "DiT-XL/4"
@@ -37,4 +37,4 @@ dit_learn_sigma: True
 num_sampling_steps: 250
 
 # Training parameters
-mini_frames: 56
+mini_frames: 28
