@@ -27,7 +27,7 @@ class PTDataset(torch.utils.data.Dataset):
 
     def _load_caption(self, file_path):
         caption_path = file_path.replace(".mp4.npz", ".txt").replace(
-            "videos_pt", "labels"
+            "videos_pt_low", "summaries"
         )
         if os.path.exists(caption_path):
             with open(caption_path, "r") as f:
