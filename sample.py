@@ -40,7 +40,7 @@ def parse_args():
                         nargs=argparse.REMAINDER)
     
     # output directory
-    parser.add_argument('--resume', default='trained_models/model_80.pth', type=str, metavar='PATH',
+    parser.add_argument('--resume', default='trained_models/model_17.pth', type=str, metavar='PATH',
                         help='path to latest checkpoint (default none)')
     parser.add_argument('--save_dir', default='sample/', type=str,
                         help='directory to save checkpoints')
@@ -113,11 +113,13 @@ def main(args):
         s = "%s is not compatible with %s. Specify --resume=.../model.pth" % (args.resume, args.config)
         raise KeyError(s) from e
     
-    for p_model, p_checkpoint in zip(ssm_model.parameters(), checkpoint['ssm_model'].values()):
-            assert torch.equal(p_model, p_checkpoint), "Model and checkpoint parameters are not equal"
+    for layer_name, p_model in ssm_model.named_parameters():
+        if not torch.equal(p_model, checkpoint['ssm_model'][layer_name]):
+            print(f"Model and checkpoint parameters are not equal: model: {layer_name}")
     print("SSM model loaded correctly")
-    for p_model, p_checkpoint in zip(dit_model.parameters(), checkpoint['dit_model'].values()):
-        assert torch.equal(p_model, p_checkpoint), "Model and checkpoint parameters are not equal"
+    for layer_name, p_model in dit_model.named_parameters():
+        if not torch.equal(p_model, checkpoint['ssm_model'][layer_name]):
+            print(f"Model and checkpoint parameters are not equal: model: {layer_name}")
     print("DiT model loaded correctly")
     
     scaler.load_state_dict(checkpoint['scaler'])

@@ -138,13 +138,13 @@ def main(args):
             s = "%s is not compatible with %s. Specify --resume=.../model.pth" % (args.resume, args.config)
             raise KeyError(s) from e
         
-        for n_model, p_model, n_checkpoint, p_checkpoint in zip(ssm_model.named_parameters(), checkpoint['ssm_model'].items()):
-            if not torch.equal(p_model, p_checkpoint):
-                print(f"Model and checkpoint parameters are not equal: model: {n_model}, checkpoint: {n_checkpoint}")
+        for layer_name, p_model in ssm_model.named_parameters():
+            if not torch.equal(p_model, checkpoint['ssm_model'][layer_name]):
+                print(f"Model and checkpoint parameters are not equal: model: {layer_name}")
         print("SSM model loaded correctly")
-        for n_model, p_model, n_checkpoint, p_checkpoint in zip(dit_model.named_parameters(), checkpoint['dit_model'].items()):
-            if not torch.equal(p_model, p_checkpoint):
-                print(f"Model and checkpoint parameters are not equal: model: {n_model}, checkpoint: {n_checkpoint}")
+        for layer_name, p_model in dit_model.named_parameters():
+            if not torch.equal(p_model, checkpoint['ssm_model'][layer_name]):
+                print(f"Model and checkpoint parameters are not equal: model: {layer_name}")
         print("DiT model loaded correctly")
         
         start_epoch = checkpoint['epoch'] + 1
