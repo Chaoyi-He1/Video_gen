@@ -118,7 +118,7 @@ def main(args):
             print(f"Model and checkpoint parameters are not equal: model: {layer_name}")
     print("SSM model loaded correctly")
     for layer_name, p_model in dit_model.named_parameters():
-        if not torch.equal(p_model, checkpoint['ssm_model'][layer_name]):
+        if not torch.equal(p_model, checkpoint['dit_model'][layer_name]):
             print(f"Model and checkpoint parameters are not equal: model: {layer_name}")
     print("DiT model loaded correctly")
     
