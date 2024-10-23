@@ -20,7 +20,6 @@ def train_one_epoch(
     DiT_model.train()
     metric_logger = MetricLogger(delimiter="; ")
     metric_logger.add_meter('lr', SmoothedValue(window_size=1, fmt='{value:.6f}'))
-    metric_logger.add_meter('loss', SmoothedValue(window_size=10, fmt='{value:.6f}'))
     header = 'Epoch: [{}]'.format(epoch)
     
     for batch in metric_logger.log_every(data_loader, print_freq, header):
