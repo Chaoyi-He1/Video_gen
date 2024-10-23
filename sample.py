@@ -40,11 +40,11 @@ def parse_args():
                         nargs=argparse.REMAINDER)
     
     # output directory
-    parser.add_argument('--resume', default='trained_models/model_17.pth', type=str, metavar='PATH',
+    parser.add_argument('--resume', default='trained_models/model_2.pth', type=str, metavar='PATH',
                         help='path to latest checkpoint (default none)')
     parser.add_argument('--save_dir', default='sample/', type=str,
                         help='directory to save checkpoints')
-    parser.add_argument('--test-dir', default='data/train_data/labels/', type=str,
+    parser.add_argument('--test-dir', default='data/train_data/summaries/', type=str,
                         help='directory to read test results')
     parser.add_argument('--test_num', default=3, type=int,
                         help='number of test results to generate')
