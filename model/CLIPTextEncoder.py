@@ -55,7 +55,7 @@ class SSM_input_projection(nn.Module):
         
         self.querries = nn.Parameter(torch.randn(1, self.num_frames, self.input_dim))
         self.querries_proj = nn.ModuleList([
-            ConcatSquashLinear(self.input_dim, self.input_dim, self.input_dim)] * config["num_querries_concats_layers"] + [
+            ConcatSquashLinear(self.input_dim, self.input_dim, self.input_dim) for _ in range(config["num_querries_concats_layers"])] + [
             nn.LayerNorm(self.input_dim)])
         
         decoder_layer = nn.TransformerDecoderLayer(
