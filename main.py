@@ -40,7 +40,7 @@ def parse_args():
                         nargs=argparse.REMAINDER)
     
     # output directory
-    parser.add_argument('--resume', default='trained_models/model_4.pth', type=str, metavar='PATH',
+    parser.add_argument('--resume', default='trained_models/model_11.pth', type=str, metavar='PATH',
                         help='path to latest checkpoint (default none)')
     parser.add_argument('--save_dir', default='trained_models/', type=str,
                         help='directory to save checkpoints')
@@ -53,7 +53,7 @@ def parse_args():
                         help='device to use for training / testing')
     parser.add_argument('--num_workers', default=4, type=int,
                         help='number of data loading workers')
-    parser.add_argument('--batch_size', default=2, type=int,
+    parser.add_argument('--batch_size', default=4, type=int,
                         help='input batch size for training')
     parser.add_argument('--epochs', default=500, type=int,
                         help='number of epochs to train')
