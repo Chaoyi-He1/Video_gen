@@ -44,7 +44,8 @@ def train_one_epoch(
                                     for i in range(0, b*f, mini_frames)], dim=0) 
                 
                 videos = videos.view(b, f, c+1, h//8, w//8).transpose(1, 2)
-        vae.cpu()
+        # send vae back to cpu and free gpu memory
+        vae.to('cpu')
         
         # Loop over smaller mini-batches (chunks)
         with torch.amp.autocast('cuda', enabled=scaler is not None):
