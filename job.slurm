@@ -5,7 +5,7 @@
 #SBATCH --time=72:00:00              		#Set the wall clock limit to 1hr and 30min
 #SBATCH --ntasks=8                   		#Request 1 task (CPU)
 #SBATCH --ntasks-per-node=8          		#Request exactly (or max) of 28 tasks per node
-#SBATCH --mem=64G                    		#Request 64GB per node
+#SBATCH --mem=48G                    		#Request 64GB per node
 #SBATCH --gres=gpu:a100:2            		#Request 1 GPU per node can be 1 or 2, type=k80 or v100
 #SBATCH --partition=gpu              		#Request the GPU partition/queue
 #SBATCH -o Video_gen_DiT_L_4_%j.log    		#Send stdout/err to "Example4Out.[jobID]"
