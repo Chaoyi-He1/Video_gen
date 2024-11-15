@@ -24,6 +24,7 @@ from dataloader import create_data_loader, CLIPTextTokenizer, PTDataset
 from model import create_model
 from train_eval import *
 from diffusers.models import AutoencoderKL
+from diffusers import AutoencoderKLCogVideoX
 
 # the first flag below was False when we tested this script but True makes A100 training a lot faster:
 torch.backends.cuda.matmul.allow_tf32 = True
@@ -40,7 +41,7 @@ def parse_args():
                         nargs=argparse.REMAINDER)
     
     # output directory
-    parser.add_argument('--resume', default='trained_models/model_97.pth', type=str, metavar='PATH',
+    parser.add_argument('--resume', default='trained_models/model_', type=str, metavar='PATH',
                         help='path to latest checkpoint (default none)')
     parser.add_argument('--save_dir', default='trained_models/', type=str,
                         help='directory to save checkpoints')
@@ -121,7 +122,8 @@ def main(args):
     # create model
     ssm_model, dit_model, diffusion = create_model(config, is_train=True)
     tokenizer = CLIPTextTokenizer(model_dir=config["textencoder"])
-    vae = AutoencoderKL.from_pretrained(f"stabilityai/sd-vae-ft-{args.vae}").to(device)
+    vae = AutoencoderKLCogVideoX.from_pretrained("THUDM/CogVideoX-2b", subfolder="vae", torch_dtype=torch.float16).to(device)
+    vae.requires_grad_(False)
     
     start_epoch = args.start_epoch
     scaler = torch.amp.GradScaler('cuda', enabled=args.amp) if args.amp else None
