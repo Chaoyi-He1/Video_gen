@@ -6,7 +6,7 @@ from dataloader.text_tokenizer import CLIPTextTokenizer
 from diffusers.models import AutoencoderKL
 import cv2
 from diffusion.respace import SpacedDiffusion
-
+from torchvision.utils import save_image
 
 def sampling(
     ssm_model: torch.nn.Module, tokenizer: CLIPTextTokenizer,
@@ -49,6 +49,8 @@ def sampling(
                 
                 samples = samples.transpose(1, 2).view(b*f, 4, DiT_model.input_size, DiT_model.input_size)
                 samples = torch.cat([vae.decode(samples[i:i+4, ...] / 0.18215).sample for i in range(0, b*f, 4)], dim=0)
+                img = samples[0, ...]
+                save_image(img, f"{output_dir}/sample_{i}.png")
                 print("samples range: ", samples.min(), samples.max())
                 samples = (samples - samples.min()) / (samples.max() - samples.min())
                 
