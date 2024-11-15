@@ -24,6 +24,7 @@ from dataloader import create_data_loader, CLIPTextTokenizer, PTDataset
 from model import create_model
 from train_eval import *
 from diffusers.models import AutoencoderKL
+from diffusers import AutoencoderKLCogVideoX
 import cv2
 import torch.utils.data as data
 from torchvision.utils import save_image
@@ -51,7 +52,7 @@ def parse_args():
     parser.add_argument("--vae", type=str, choices=["ema", "mse"], default="ema")  # Choice doesn't affect training
     parser.add_argument('--seed', default=42, type=int,
                         help='seed for initializing training. ')
-    parser.add_argument('--device', default='cuda', type=str,
+    parser.add_argument('--device', default='cuda:1', type=str,
                         help='device to use for training / testing')
     parser.add_argument('--num_workers', default=4, type=int,
                         help='number of data loading workers')
@@ -81,7 +82,7 @@ def main(args):
     # np.random.seed(args.seed)
     
     torch.set_grad_enabled(False)
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = "cuda:1" if torch.cuda.is_available() else "cpu"
     # print the gpu model name to check if it is A100
     print(torch.cuda.get_device_name())
     
@@ -90,7 +91,7 @@ def main(args):
         config = yaml.load(f, Loader=yaml.FullLoader)
     
     # create model
-    vae = AutoencoderKL.from_pretrained(f"stabilityai/sd-vae-ft-{args.vae}").to(device)
+    vae = AutoencoderKLCogVideoX.from_pretrained("THUDM/CogVideoX-2b", subfolder="vae", torch_dtype=torch.float16).to(device)
     
     # create data loaders
     dataset = PTDataset(
@@ -107,30 +108,30 @@ def main(args):
     
     # get one sample from the dataloader
     for sample in dataloader:
-        videos = sample["mp4"]
-        # take the first video's first frame
-        img = videos[0, 0, ...].to(device)
+        videos = sample["mp4"][:, :28, ...].to(device).half()
+        videos = videos.transpose(1, 2) # (B, F, C, H, W) -> (B, C, F, H, W)
         
         # use the vae to encode the image and then decode it
         with torch.no_grad():
-            enc_img = vae.encode(img.unsqueeze(0)).latent_dist.sample().mul_(0.18215) 
-            print("Encoded image range: ", enc_img.min(), enc_img.max())
-            dec_img = vae.decode(enc_img / 0.18215).sample.squeeze(0)
-            print("Decoded image range: ", dec_img.min(), dec_img.max())
+            enc_v = vae.encode(videos).latent_dist.sample().mul_(0.18215)
+            print("Encoded image range: ", enc_v.min(), enc_v.max())
+            dec_v = vae.decode(enc_v / 0.18215).sample.squeeze(0)
+            print("Decoded image range: ", dec_v.min(), dec_v.max())
         
         # generate a histogram of the encoded image values
-        plt.hist(dec_img.cpu().numpy().flatten(), bins=100)
+        plt.hist(dec_v.cpu().numpy().flatten(), bins=100)
         plt.savefig("histogram.png")
-        # save the original and decoded image
-        img = ((img - img.min()) / (img.max() - img.min()) * 255).permute(1, 2, 0).cpu().numpy().astype(np.uint8)
-        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-        cv2.imwrite("original.jpg", img)
         
-        dec_img = ((dec_img - dec_img.min()) / (dec_img.max() - dec_img.min()) * 255).permute(1, 2, 0).cpu().numpy().astype(np.uint8)
-        dec_img = cv2.cvtColor(dec_img, cv2.COLOR_RGB2BGR)
-        cv2.imwrite("decoded.jpg", dec_img)
-        
-        break
+        # save the decoded video
+        dec_v = dec_v.permute(1, 2, 3, 0).cpu().numpy()
+        dec_v = ((dec_v - dec_v.min()) / (dec_v.max() - dec_v.min()) * 255).astype('uint8')
+        dec_v = [cv2.cvtColor(frame, cv2.COLOR_RGB2BGR) for frame in dec_v]
+        video_path = "decoded_video.mp4"
+        out = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*'mp4v'), 8, (dec_v[0].shape[1], dec_v[0].shape[0]))
+        for frame in dec_v:
+            out.write(frame)
+        out.release()
+        return
 
 if __name__ == '__main__':
     args = parse_args()
