@@ -168,7 +168,7 @@ def main(args):
     # move to distributed mode
     ssm_model = torch.nn.parallel.DistributedDataParallel(ssm_model, device_ids=[args.gpu])
     dit_model = torch.nn.parallel.DistributedDataParallel(dit_model, device_ids=[args.gpu])
-    vae = torch.nn.parallel.DistributedDataParallel(vae, device_ids=[args.gpu])
+    # vae = torch.nn.parallel.DistributedDataParallel(vae, device_ids=[args.gpu])
     ssm_model_without_ddp = ssm_model.module
     dit_model_without_ddp = dit_model.module
     
