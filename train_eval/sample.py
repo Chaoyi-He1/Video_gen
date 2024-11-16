@@ -58,7 +58,7 @@ def sampling(
                 if torch.isnan(samples).any():
                     print("NaN samples")
                     continue
-                # bf, c, h, w = samples.shape
+                b, c, f, h, w = samples.shape
                 # assert f == bf // b, "Batch size mismatch"
                 # samples = samples.view(b, f, c, h, w) # (b*f, c, h, w) -> (b, f, c, h, w)
         
