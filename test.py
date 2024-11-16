@@ -82,7 +82,7 @@ def main(args):
     # np.random.seed(args.seed)
     
     torch.set_grad_enabled(False)
-    device = "cuda:1" if torch.cuda.is_available() else "cpu"
+    device = "cuda" if torch.cuda.is_available() else "cpu"
     # print the gpu model name to check if it is A100
     print(torch.cuda.get_device_name())
     
