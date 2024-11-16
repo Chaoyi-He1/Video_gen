@@ -52,7 +52,7 @@ def sampling(
                 img = samples[0, :, 0, ...]
                 save_image(img, f"{output_dir}/sample_{i}.png")
                 print("samples range: ", samples.min(), samples.max())
-                samples = (samples - samples.min()) / (samples.max() - samples.min())
+                # samples = (samples - samples.min()) / (samples.max() - samples.min())
                 
                 # check if nan exists
                 if torch.isnan(samples).any():
@@ -65,7 +65,7 @@ def sampling(
         for j in range(b):
             # Save the video in the batch
             video = samples[j].permute(1, 2, 3, 0).cpu().numpy()
-            video = (video * 255).astype('uint8')
+            video = ((video - video.min()) / (video.max() - video.min()) * 255).astype('uint8')
             video = [cv2.cvtColor(frame, cv2.COLOR_RGB2BGR) for frame in video]
             video_path = f"{output_dir}/sample_{i}_{j}.mp4"
             # check if the folder exists
