@@ -41,15 +41,15 @@ def sampling(
                     DiT_model.forward_with_cfg, z.shape, z, clip_denoised=False, 
                     model_kwargs=model_kwargs, progress=True, device=z.device
                 )
-                samples, _ = samples.chunk(2, dim=0)  # Remove null class samples
+                samples, _ = samples.chunk(2, dim=0)  # Remove null class samples, (b, c, f, h, w)
         
                 if torch.isnan(samples).any():
                     print("NaN samples")
                     continue
                 
-                samples = samples.transpose(1, 2).view(b*f, 4, DiT_model.input_size, DiT_model.input_size)
-                samples = torch.cat([vae.decode(samples[i:i+4, ...] / 0.18215).sample for i in range(0, b*f, 4)], dim=0)
-                img = samples[0, ...]
+                # samples = samples.transpose(1, 2).view(b*f, 4, DiT_model.input_size, DiT_model.input_size)
+                samples = vae.decode(samples / 0.18215).sample
+                img = samples[0, :, 0, ...]
                 save_image(img, f"{output_dir}/sample_{i}.png")
                 print("samples range: ", samples.min(), samples.max())
                 samples = (samples - samples.min()) / (samples.max() - samples.min())
@@ -58,13 +58,13 @@ def sampling(
                 if torch.isnan(samples).any():
                     print("NaN samples")
                     continue
-                bf, c, h, w = samples.shape
-                assert f == bf // b, "Batch size mismatch"
-                samples = samples.view(b, f, c, h, w)
+                # bf, c, h, w = samples.shape
+                # assert f == bf // b, "Batch size mismatch"
+                # samples = samples.view(b, f, c, h, w) # (b*f, c, h, w) -> (b, f, c, h, w)
         
         for j in range(b):
             # Save the video in the batch
-            video = samples[j].permute(0, 2, 3, 1).cpu().numpy()
+            video = samples[j].permute(1, 2, 3, 0).cpu().numpy()
             video = (video * 255).astype('uint8')
             video = [cv2.cvtColor(frame, cv2.COLOR_RGB2BGR) for frame in video]
             video_path = f"{output_dir}/sample_{i}_{j}.mp4"

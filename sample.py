@@ -23,7 +23,7 @@ import utils.misc as utils
 from dataloader import create_data_loader, CLIPTextTokenizer, PTDataset
 from model import create_model
 from train_eval import *
-from diffusers.models import AutoencoderKL
+from diffusers.models import AutoencoderKL, AutoencoderKLCogVideoX
 
 # the first flag below was False when we tested this script but True makes A100 training a lot faster:
 torch.backends.cuda.matmul.allow_tf32 = True
@@ -97,7 +97,8 @@ def main(args):
     # create model
     ssm_model, dit_model, diffusion = create_model(config, is_train=False)
     tokenizer = CLIPTextTokenizer(model_dir=config["textencoder"])
-    vae = AutoencoderKL.from_pretrained(f"stabilityai/sd-vae-ft-{args.vae}").to(device)
+    vae = AutoencoderKLCogVideoX.from_pretrained("THUDM/CogVideoX-2b", subfolder="vae", torch_dtype=torch.float16).to(device)
+    vae.requires_grad_(False)
     
     scaler = torch.amp.GradScaler('cuda', enabled=args.amp) if args.amp else None
     
