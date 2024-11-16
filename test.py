@@ -92,7 +92,7 @@ def main(args):
     
     # create model
     vae = AutoencoderKLCogVideoX.from_pretrained("THUDM/CogVideoX-2b", subfolder="vae", torch_dtype=torch.float16).to(device)
-    
+    vae.requires_grad_(False)
     # create data loaders
     dataset = PTDataset(
         data_dir=config["data_dir"]
