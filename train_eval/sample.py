@@ -13,7 +13,7 @@ def sampling(
     diffusion: SpacedDiffusion, DiT_model: torch.nn.Module,
     data_loader: Iterable, device: torch.device, 
     scaler=None, print_freq: int = 1, vae: AutoencoderKL = None,
-    fps: float = 8, output_dir: str = "sample/",
+    fps: float = 8, output_dir: str = "sample/", channels: int = 4,
 ):
     ssm_model.eval()
     DiT_model.eval()
@@ -27,7 +27,7 @@ def sampling(
                 ssm_out = ssm_model(**captions)
                 b, f, _ = ssm_out.shape
                 
-                z = torch.randn(b, 4, f, DiT_model.input_size, DiT_model.input_size, device=ssm_out.device)
+                z = torch.randn(b, channels, f, DiT_model.input_size, DiT_model.input_size, device=ssm_out.device)
                 # Setup classifier-free guidance:
                 z = torch.cat([z, z], 0)
                 

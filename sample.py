@@ -40,7 +40,7 @@ def parse_args():
                         nargs=argparse.REMAINDER)
     
     # output directory
-    parser.add_argument('--resume', default='trained_models/model_105.pth', type=str, metavar='PATH',
+    parser.add_argument('--resume', default='trained_models/model_4.pth', type=str, metavar='PATH',
                         help='path to latest checkpoint (default none)')
     parser.add_argument('--save_dir', default='sample/', type=str,
                         help='directory to save checkpoints')
@@ -145,7 +145,7 @@ def main(args):
         diffusion=diffusion, DiT_model=dit_model,
         data_loader=captions, device=device,
         scaler=scaler, print_freq=1, vae=vae, fps=config["fps"],
-        output_dir=args.save_dir,
+        output_dir=args.save_dir, channels=config["dit_in_channels"]
     )
     
 if __name__ == '__main__':
