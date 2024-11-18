@@ -15,6 +15,9 @@ def sampling(
     scaler=None, print_freq: int = 1, vae: AutoencoderKL = None,
     fps: float = 8, output_dir: str = "sample/", channels: int = 4,
 ):
+    ssm_model.to(device)
+    DiT_model.to(device)
+    
     ssm_model.eval()
     DiT_model.eval()
     assert vae is not None, "VAE model is required for sampling"
@@ -47,6 +50,8 @@ def sampling(
                     print("NaN samples")
                     continue
                 
+                DiT_model.to("cpu")
+                ssm_model.to("cpu")
                 # samples = samples.transpose(1, 2).view(b*f, 4, DiT_model.input_size, DiT_model.input_size)
                 samples = vae.decode(samples / 0.18215).sample
                 img = samples[0, :, 0, ...]
