@@ -15,14 +15,14 @@ def sampling(
     scaler=None, print_freq: int = 1, vae: AutoencoderKL = None,
     fps: float = 8, output_dir: str = "sample/", channels: int = 4,
 ):
-    ssm_model.to(device)
-    DiT_model.to(device)
-    
     ssm_model.eval()
     DiT_model.eval()
     assert vae is not None, "VAE model is required for sampling"
     
     for i, sample in enumerate(data_loader):
+        ssm_model.to(device)
+        DiT_model.to(device)
+        
         captions = tokenizer.tokenize(sample).to(device)
         
         with torch.amp.autocast('cuda', enabled=scaler is not None):
