@@ -41,7 +41,7 @@ def parse_args():
                         nargs=argparse.REMAINDER)
     
     # output directory
-    parser.add_argument('--resume', default='trained_models/model_19.pth', type=str, metavar='PATH',
+    parser.add_argument('--resume', default='trained_models/model_39.pth', type=str, metavar='PATH',
                         help='path to latest checkpoint (default none)')
     parser.add_argument('--save_dir', default='trained_models/', type=str,
                         help='directory to save checkpoints')
