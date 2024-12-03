@@ -176,7 +176,7 @@ class Diffusion_utils(nn.Module):
         batch_size = x_0.shape[0]   # (B, N, c, d)
         if t == None:
             t = self.var_sched.uniform_sample_t(batch_size)
-
+        t = torch.tensor(t).to(x_0.device)
         alpha_bar = self.var_sched.alpha_bars[t]
         beta = self.var_sched.betas[t].cuda()
 
@@ -223,7 +223,7 @@ class Diffusion_utils(nn.Module):
 
                 x_t = traj[t]
                 beta = self.var_sched.betas[[t] * batch_size]
-                e_theta = model(x_t, y=context, t=t)
+                e_theta = model(x_t, y=context, t=torch.tensor([t] * batch_size).to(x_t.device))
                 if sampling == "ddpm":
                     x_next = c0 * (x_t - c1 * e_theta) + sigma * z
                 elif sampling == "ddim":
