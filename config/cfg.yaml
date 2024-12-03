@@ -35,6 +35,8 @@ dit_in_channels: 16
 dit_learn_sigma: True
 
 num_sampling_steps: 1000
+diffusion_schedule_mode: "linear"
+dit_learn_sigma: True
 
 # Training parameters
 mini_frames: 28
