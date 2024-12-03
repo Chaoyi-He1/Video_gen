@@ -25,7 +25,7 @@ from model import create_model
 from train_eval.train_simple import train_one_epoch
 from diffusers.models import AutoencoderKL
 from diffusers import AutoencoderKLCogVideoX
-from diffusion import VarianceSchedule
+from diffusion.diffusion_utils import VarianceSchedule
 from diffusion.diffusion_utils import Diffusion_utils
 
 # the first flag below was False when we tested this script but True makes A100 training a lot faster:
@@ -240,7 +240,6 @@ def main(args):
             data_loader=dataloader, optimizer=optimizer, 
             device=device, epoch=epoch, max_norm=args.clip_max_norm,
             scaler=scaler, print_freq=args.print_freq, vae=vae,
-            mini_frames=config["mini_frames"],
         )
         scheduler.step()
         

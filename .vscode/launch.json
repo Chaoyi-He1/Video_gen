@@ -13,7 +13,7 @@
             "args": [
                 "--nproc_per_node",
                 "2",
-                "main.py",
+                "main_simple.py",
             ]
         }
     ]
