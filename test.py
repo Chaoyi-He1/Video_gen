@@ -122,6 +122,10 @@ def main(args):
         plt.hist(dec_v.cpu().numpy().flatten(), bins=100)
         plt.savefig("histogram.png")
         
+        # save first frame of the video as an image
+        img = dec_v[:, 0, ...]
+        save_image(img, "image.png")
+        
         # save the decoded video
         dec_v = dec_v.permute(1, 2, 3, 0).cpu().numpy()
         dec_v = ((dec_v - dec_v.min()) / (dec_v.max() - dec_v.min()) * 255).astype('uint8')
