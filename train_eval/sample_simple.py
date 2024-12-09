@@ -38,6 +38,8 @@ def sampling(
                     model=DiT_model, 
                 )
                 samples = samples[0, ...]  # (b, c, f, h, w)
+                print("samples range: ", samples.min(), samples.max())
+                samples = samples.clamp(-1, 1)
         
                 if torch.isnan(samples).any():
                     print("NaN samples")
