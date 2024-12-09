@@ -34,7 +34,7 @@ def sampling(
                 
                 # Sample images:
                 samples = diffusion.sample(
-                    shape=x_shape, context=ssm_out, sample=1, bestof=False, step=4, 
+                    shape=x_shape, context=ssm_out, sample=1, bestof=False, step=1, 
                     model=DiT_model, 
                 )
                 samples = samples[0, ...]  # (b, c, f, h, w)
