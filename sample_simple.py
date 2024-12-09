@@ -97,6 +97,9 @@ def main(args):
     Path(args.save_dir).mkdir(parents=True, exist_ok=True)
     
     # create model
+    config["dit_learn_sigma"] = False
+    print("Learning sigma is set to: ", config["dit_learn_sigma"])
+    
     ssm_model, dit_model, _ = create_model(config, is_train=False)
     tokenizer = CLIPTextTokenizer(model_dir=config["textencoder"])
     vae = AutoencoderKLCogVideoX.from_pretrained("THUDM/CogVideoX-2b", subfolder="vae", torch_dtype=torch.float16).to(device)
