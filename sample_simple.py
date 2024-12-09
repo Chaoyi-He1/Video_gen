@@ -24,7 +24,7 @@ from dataloader import create_data_loader, CLIPTextTokenizer, PTDataset
 from model import create_model
 from train_eval.sample_simple import sampling
 from diffusers.models import AutoencoderKL, AutoencoderKLCogVideoX
-from diffusion import VarianceSchedule
+from diffusion.diffusion_utils import VarianceSchedule
 from diffusion.diffusion_utils import Diffusion_utils
 
 # the first flag below was False when we tested this script but True makes A100 training a lot faster:
