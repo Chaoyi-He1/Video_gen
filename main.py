@@ -257,7 +257,7 @@ def main(args):
         if args.rank in [-1, 0]:
             if (epoch % args.save_freq == 0) or (epoch == args.epochs - 1):
                 utils.save_on_master({
-                    'ssm_model': ssm_model_without_ddp.state_dict(),
+                    'ssm_model': ssm_model_without_ddp.state_dict() if not args.freeze_ssm else ssm_model.state_dict(),
                     'dit_model': dit_model_without_ddp.state_dict(),
                     'scaler': scaler.state_dict(),
                     'optimizer': optimizer.state_dict(),
