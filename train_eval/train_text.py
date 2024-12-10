@@ -35,7 +35,8 @@ def train_one_epoch(
         with torch.amp.autocast('cuda', enabled=scaler is not None):
             with torch.no_grad():
                 # get the pooled representation of the text
-                pooled_text = ssm_model.module.textencoder(**captions).pooler_output.unsqueeze(1).detach()
+                pooled_text = ssm_model.module.textencoder.textencoder(**captions)
+                pooled_text = pooled_text.pooler_output.unsqueeze(1).detach()
         
         with torch.amp.autocast('cuda', enabled=scaler is not None):
             # Move the forward pass inside the loop
