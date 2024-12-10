@@ -41,7 +41,7 @@ def parse_args():
                         nargs=argparse.REMAINDER)
     
     # output directory
-    parser.add_argument('--resume', default='trained_models/model_106.pth', type=str, metavar='PATH',
+    parser.add_argument('--resume', default='trained_models/model_124.pth', type=str, metavar='PATH',
                         help='path to latest checkpoint (default none)')
     parser.add_argument('--save_dir', default='trained_models/', type=str,
                         help='directory to save checkpoints')
@@ -72,6 +72,8 @@ def parse_args():
                         help='learning rate factor')
     parser.add_argument('--clip_max_norm', default=.1, type=float,
                         help='gradient clipping max norm')
+    parser.add_argument('--freeze_ssm', action='store_false', default=True,
+                        help='freeze ssm model')
     
     # distributed training parameter
     parser.add_argument('--world_size', default=1, type=int,
@@ -164,22 +166,36 @@ def main(args):
                 if p.requires_grad:
                     print(f"Freezing {n}, from {p.requires_grad} to False")
                 p.requires_grad = False
+    
+    if args.freeze_ssm:
+        for p in ssm_model.parameters():
+            p.requires_grad = False
                 
     # move to distributed mode
-    ssm_model = torch.nn.parallel.DistributedDataParallel(ssm_model, device_ids=[args.gpu])
+    if not args.freeze_ssm:
+        ssm_model = torch.nn.parallel.DistributedDataParallel(ssm_model, device_ids=[args.gpu])
     dit_model = torch.nn.parallel.DistributedDataParallel(dit_model, device_ids=[args.gpu])
     # vae = torch.nn.parallel.DistributedDataParallel(vae, device_ids=[args.gpu])
-    ssm_model_without_ddp = ssm_model.module
+    if not args.freeze_ssm:
+        ssm_model_without_ddp = ssm_model.module
     dit_model_without_ddp = dit_model.module
     
     # create optimizer and scheduler and model info
     p_to_optimize, n_p, n_p_o, layers = [], 0, 0, 0
-    for p in ssm_model.module.parameters():
-        n_p += p.numel()
-        if p.requires_grad:
-            p_to_optimize.append(p)
-            n_p_o += p.numel()
-            layers += 1
+    if not args.freeze_ssm:
+        for p in ssm_model.module.parameters():
+            n_p += p.numel()
+            if p.requires_grad:
+                p_to_optimize.append(p)
+                n_p_o += p.numel()
+                layers += 1
+    else:
+        for p in ssm_model.parameters():
+            n_p += p.numel()
+            if p.requires_grad:
+                p_to_optimize.append(p)
+                n_p_o += p.numel()
+                layers += 1
     for p in dit_model.module.parameters():
         n_p += p.numel()
         if p.requires_grad:
