@@ -22,9 +22,9 @@ class TextDecoder(nn.Module):
         )
         self.decoder = nn.TransformerDecoder(
             decoder_layer, 
-            num_layers=config["decoder_num_layers"]
+            num_layers=4
         )   
-        
+        self.proj = nn.Linear(2 * config["input_dim"], config["input_dim"])
         self.initialize_weights()
     
     def initialize_weights(self):
@@ -39,6 +39,7 @@ class TextDecoder(nn.Module):
         '''
         B, F, D = ssm_out.shape
         query = self.query.repeat(B, 1, 1)
+        ssm_out = self.proj(ssm_out)
         ssm_out = ssm_out.transpose(0, 1)
         query = query.transpose(0, 1)
         out = self.decoder(query, ssm_out)
