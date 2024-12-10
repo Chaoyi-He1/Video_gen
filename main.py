@@ -43,6 +43,8 @@ def parse_args():
     # output directory
     parser.add_argument('--resume', default='trained_models/model_124.pth', type=str, metavar='PATH',
                         help='path to latest checkpoint (default none)')
+    parser.add_argument('--textencoder', default='trained_models/text/model_124.pth', 
+                        type=str, help='path to latest text encoder checkpoint')
     parser.add_argument('--save_dir', default='trained_models/', type=str,
                         help='directory to save checkpoints')
     
@@ -155,6 +157,23 @@ def main(args):
         scaler.load_state_dict(checkpoint['scaler'])
         del checkpoint
         print(f"Loaded checkpoint: {args.resume}")
+    
+    # load text encoder checkpoint
+    if args.textencoder.endswith('.pth'):
+        print(f"Loading text encoder checkpoint: {args.textencoder}")
+        checkpoint = torch.load(args.textencoder, map_location='cpu', weights_only=False)
+        try:
+            ssm_model.load_state_dict(checkpoint['ssm_model'], strict=False)
+        except KeyError as e:
+            s = "%s is not compatible with %s. Specify --resume=.../model.pth" % (args.resume, args.config)
+            raise KeyError(s) from e
+        print("Text encoder loaded correctly")
+        
+        for layer_name, p_model in ssm_model.named_parameters():
+            if not torch.equal(p_model, checkpoint['ssm_model'][layer_name]):
+                print(f"Model and checkpoint parameters are not equal: model: {layer_name}")
+        print("SSM model loaded correctly")
+        del checkpoint
     
     ssm_model.to(device)
     dit_model.to(device)
