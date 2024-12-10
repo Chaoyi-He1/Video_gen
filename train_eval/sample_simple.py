@@ -39,7 +39,7 @@ def sampling(
                 )
                 samples = samples[0, ...]  # (b, c, f, h, w)
                 print("samples range: ", samples.min(), samples.max())
-                samples = samples.clamp(-1, 1)
+                samples = samples.clamp(-0.9, 0.9)
         
                 if torch.isnan(samples).any():
                     print("NaN samples")
