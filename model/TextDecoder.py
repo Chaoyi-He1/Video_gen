@@ -22,7 +22,7 @@ class TextDecoder(nn.Module):
         )
         self.decoder = nn.TransformerDecoder(
             decoder_layer, 
-            num_layers=4
+            num_layers=config["decoder_num_layers"]
         )   
         self.proj = nn.Linear(2 * config["input_dim"], config["input_dim"])
         self.initialize_weights()

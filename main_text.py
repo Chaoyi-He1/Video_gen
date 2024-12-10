@@ -61,7 +61,7 @@ def parse_args():
                         help='number of epochs to train')
     parser.add_argument('--start_epoch', default=0, type=int,
                         help='start epoch')
-    parser.add_argument('--print_freq', default=200, type=int,
+    parser.add_argument('--print_freq', default=50, type=int,
                         help='print frequency')
     parser.add_argument('--save_freq', default=1, type=int,
                         help='save frequency')
