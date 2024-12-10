@@ -70,7 +70,7 @@ def train_one_epoch(
             
             metric_logger.update(loss=loss.item())
             
-    metric_logger.update(lr=optimizer.param_groups[0]["lr"])
+        metric_logger.update(lr=optimizer.param_groups[0]["lr"])
     metric_logger.synchronize_between_processes()
     print("Average loss: ", metric_logger.loss.global_avg)
     return {k: meter.global_avg for k, meter in metric_logger.meters.items()}
