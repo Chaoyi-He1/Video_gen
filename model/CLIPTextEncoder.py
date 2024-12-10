@@ -80,7 +80,7 @@ class SSM_input_projection(nn.Module):
             if i == len(self.querries_proj) - 1:
                 querries = layer(querries)
             else:
-                querries = layer(pooled_output, querries)
+                querries = layer(ctx=querries, x=pooled_output)
         querries = querries.permute(1, 0, 2).contiguous()
         tgt_mask = (1 - torch.tril(torch.ones(self.num_frames, self.num_frames))).bool().to(querries.device)
         
