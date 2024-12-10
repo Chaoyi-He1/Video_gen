@@ -12,9 +12,9 @@ from .CLIPTextEncoder import SSM_input_projection
 class TextDecoder(nn.Module):
     def __init__(self, config: dict) -> None:
         super(TextDecoder, self).__init__()
-        self.query = nn.Parameter(torch.randn(1, 1, 2 * config["input_dim"]))
+        self.query = nn.Parameter(torch.randn(1, 1, config["input_dim"]))
         decoder_layer = nn.TransformerDecoderLayer(
-            d_model=config["input_dim"] * 2,
+            d_model=config["input_dim"],
             nhead=config["decoder_nhead"],
             dim_feedforward=config["decoder_dim_feedforward"],
             dropout=config["decoder_dropout"],
