@@ -43,7 +43,7 @@ def parse_args():
     # output directory
     parser.add_argument('--resume', default='trained_models/model_', type=str, metavar='PATH',
                         help='path to latest checkpoint (default none)')
-    parser.add_argument('--textencoder', default='trained_models/text/model_22.pth', 
+    parser.add_argument('--textencoder', default='trained_models/text/model_37.pth', 
                         type=str, help='path to latest text encoder checkpoint')
     parser.add_argument('--save_dir', default='trained_models/', type=str,
                         help='directory to save checkpoints')
