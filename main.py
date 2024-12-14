@@ -189,6 +189,7 @@ def main(args):
     if args.freeze_ssm:
         for p in ssm_model.parameters():
             p.requires_grad = False
+        print("Freezing SSM model")
                 
     # move to distributed mode
     if not args.freeze_ssm:
