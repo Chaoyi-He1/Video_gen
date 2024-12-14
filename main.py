@@ -172,7 +172,7 @@ def main(args):
         for layer_name, p_model in ssm_model.named_parameters():
             if not torch.equal(p_model, checkpoint['ssm_model'][layer_name]):
                 print(f"Model and checkpoint parameters are not equal: model: {layer_name}")
-        print("SSM model loaded correctly")
+        print("SSM model loaded correctly from text encoder")
         del checkpoint
     
     ssm_model.to(device)
