@@ -43,8 +43,10 @@ def parse_args():
                         nargs=argparse.REMAINDER)
     
     # output directory
-    parser.add_argument('--resume', default='trained_models/simple/model_26.pth', type=str, metavar='PATH',
+    parser.add_argument('--resume', default='trained_models/simple/model_', type=str, metavar='PATH',
                         help='path to latest checkpoint (default none)')
+    parser.add_argument('--textencoder', default='trained_models/text/model_100.pth', 
+                        type=str, help='path to latest text encoder checkpoint')
     parser.add_argument('--save_dir', default='trained_models/simple/', type=str,
                         help='directory to save checkpoints')
     
@@ -74,6 +76,8 @@ def parse_args():
                         help='learning rate factor')
     parser.add_argument('--clip_max_norm', default=.1, type=float,
                         help='gradient clipping max norm')
+    parser.add_argument('--freeze_ssm', action='store_false', default=True,
+                        help='freeze ssm model')
     
     # distributed training parameter
     parser.add_argument('--world_size', default=1, type=int,
@@ -165,6 +169,23 @@ def main(args):
         del checkpoint
         print(f"Loaded checkpoint: {args.resume}")
     
+    # load text encoder checkpoint
+    if args.textencoder.endswith('.pth'):
+        print(f"Loading text encoder checkpoint: {args.textencoder}")
+        checkpoint = torch.load(args.textencoder, map_location='cpu', weights_only=False)
+        try:
+            ssm_model.load_state_dict(checkpoint['ssm_model'], strict=False)
+        except KeyError as e:
+            s = "%s is not compatible with %s. Specify --resume=.../model.pth" % (args.resume, args.config)
+            raise KeyError(s) from e
+        print("Text encoder loaded correctly")
+        
+        for layer_name, p_model in ssm_model.named_parameters():
+            if not torch.equal(p_model, checkpoint['ssm_model'][layer_name]):
+                print(f"Model and checkpoint parameters are not equal: model: {layer_name}")
+        print("SSM model loaded correctly from text encoder")
+        del checkpoint
+    
     ssm_model.to(device)
     dit_model.to(device)
     
@@ -175,6 +196,11 @@ def main(args):
                 if p.requires_grad:
                     print(f"Freezing {n}, from {p.requires_grad} to False")
                 p.requires_grad = False
+    
+    if args.freeze_ssm:
+        for p in ssm_model.parameters():
+            p.requires_grad = False
+        print("Freezing SSM model")
                 
     # move to distributed mode
     ssm_model = torch.nn.parallel.DistributedDataParallel(ssm_model, device_ids=[args.gpu])
