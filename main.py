@@ -41,7 +41,7 @@ def parse_args():
                         nargs=argparse.REMAINDER)
     
     # output directory
-    parser.add_argument('--resume', default='trained_models/model_124.pth', type=str, metavar='PATH',
+    parser.add_argument('--resume', default='trained_models/model_161.pth', type=str, metavar='PATH',
                         help='path to latest checkpoint (default none)')
     parser.add_argument('--textencoder', default='trained_models/text/model_276.pth', 
                         type=str, help='path to latest text encoder checkpoint')
